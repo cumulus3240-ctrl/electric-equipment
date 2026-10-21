@@ -1,4 +1,4 @@
-/* LX International · Power Equipment promotion — view rendering & routing */
+/* LX International \u00b7 Power Equipment promotion \u2014 view rendering & routing */
 (function () {
   "use strict";
 
@@ -20,7 +20,7 @@
   }
   // keep compound words ("Three-phase", "step-up") on one line by using non-breaking hyphens
   function nb(s) {
-    return s.replace(/(\w)-(\w)/g, "$1‑$2");
+    return s.replace(/(\w)-(\w)/g, "$1\u2011$2");
   }
   function val(v, note) {
     if (isTBD(v)) return '<span class="tbd">TBD</span>';
@@ -34,15 +34,21 @@
   }
   // Outlook-safe mailto: ASCII only (classic Outlook garbles UTF-8 in mailto) and CRLF line breaks (RFC 6068)
   function ascii(s) {
-    return s.replace(/[‐-―−]/g, "-").replace(/[‘’]/g, "'").replace(/[“”]/g, '"')
-      .replace(/·/g, "-").replace(/[^\t\n\r\x20-\x7E]/g, "");
+    return s.replace(/[\u2010-\u2015\u2212]/g, "-").replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"')
+      .replace(/\u00b7/g, "-").replace(/[^\t\n\r\x20-\x7E]/g, "");
+  }
+  // RFC 6068: recipients comma-separated (Outlook, Apple Mail, Gmail and mobile clients all accept this form)
+  function addrList(list) {
+    return (list || []).map(function (a) { return String(a).trim(); })
+      .filter(function (a) { return /^[^\s@,;?&]+@[^\s@,;?&]+\.[^\s@,;?&]+$/.test(a); }).join(",");
   }
   function mailHref(product) {
     var M = D.CONTACT.mail;
     var subject = M.subject.replace("{product}", product || M.generalProduct);
     var body = M.body.replace("{product}", product ? "the " + product : M.generalBodyProduct).replace(/\r?\n/g, "\r\n");
-    return "mailto:" + D.CONTACT.email + "?subject=" + encodeURIComponent(ascii(subject)) +
-      "&body=" + encodeURIComponent(ascii(body));
+    var cc = addrList(M.cc);
+    return "mailto:" + addrList(M.to) + "?" + (cc ? "cc=" + cc + "&" : "") +
+      "subject=" + encodeURIComponent(ascii(subject)) + "&body=" + encodeURIComponent(ascii(body));
   }
 
   var I = {
@@ -131,7 +137,8 @@
     }).join("");
     var btns = [
       '<a class="btn btn--primary" href="' + mailHref() + '">' + icon("mail") +
-        '<span class="btn__text">Email us<small>' + esc(C.email) + '</small></span></a>',
+        '<span class="btn__text">Email us<small class="cmails">' +
+          C.mail.to.map(function (a) { return '<span>' + esc(a) + '</span>'; }).join("") + '</small></span></a>',
       '<button class="btn" type="button" data-call aria-haspopup="dialog">' + icon("phone") +
         '<span class="btn__text">Call us<small class="cnums">' + nums + '</small></span></button>'
     ];
@@ -146,8 +153,8 @@
         '<div class="wrap">' +
           '<div class="contact__card">' +
             '<p class="eyebrow eyebrow--red">Contact</p>' +
-            '<h2 id="contact-title" class="contact__title">Let’s power your next project</h2>' +
-            '<p class="contact__text">Specifications, lead times and delivery options — our ' + esc(C.team) + ' team will get back to you.</p>' +
+            '<h2 id="contact-title" class="contact__title">Let\u2019s power your next project</h2>' +
+            '<p class="contact__text">Specifications, lead times and delivery options \u2014 our ' + esc(C.team) + ' team will get back to you.</p>' +
             '<div class="contact__actions">' + btns.join("") + '</div>' +
           '</div>' +
         '</div>' +
@@ -290,7 +297,7 @@
     app.innerHTML = '' +
       '<header class="homebar" aria-hidden="true">' +
         '<div class="wrap homebar__inner">' +
-          '<a class="homebar__logo" href="#/" tabindex="-1" data-top aria-label="LX International — back to top"><img src="assets/img/brand/lx-logo.svg" alt="LX International" width="150" height="17"></a>' +
+          '<a class="homebar__logo" href="#/" tabindex="-1" data-top aria-label="LX International \u2014 back to top"><img src="assets/img/brand/lx-logo.svg" alt="LX International" width="150" height="17"></a>' +
           '<a class="homebar__cta" href="#contact" tabindex="-1" data-scroll="contact">' + icon("mail") + 'Contact</a>' +
         '</div>' +
       '</header>' +
@@ -316,7 +323,7 @@
         '<div class="wrap">' +
           '<p class="eyebrow eyebrow--red">Business model</p>' +
           '<h2 id="scope-title" class="section-title">Total provider of electrical equipment</h2>' +
-          '<p class="section-lead">From Asian factories to your site — one partner across sourcing, logistics and installation.</p>' +
+          '<p class="section-lead">From Asian factories to your site \u2014 one partner across sourcing, logistics and installation.</p>' +
           '<ul class="scope__list" aria-label="Scope of supply">' + scope + '</ul>' +
           modelBlock() +
         '</div>' +
@@ -460,7 +467,7 @@
   var DEFAULT_WHY = {
     title: "Why source through LX International",
     items: [
-      { icon: "clock", title: "Short lead times", text: "Distribution transformers in 8–16 weeks; EHV power transformers in 18–21 months." },
+      { icon: "clock", title: "Short lead times", text: "Distribution transformers in 8\u201316 weeks; EHV power transformers in 18\u201321 months." },
       { icon: "shield", title: "Secured supply", text: "Pre-inspected, approved factories and a 100% P-Bond on every supply." },
       { icon: "truck", title: "Door-to-site delivery", text: "LX Pantos logistics plus local partners for installation and O&M." }
     ]

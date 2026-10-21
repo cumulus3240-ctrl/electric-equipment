@@ -13,7 +13,8 @@
  *    - madeIn: ["kr", "tw"]  →  사용 가능한 코드: kr(Korea), tw(Taiwan), id(Indonesia), om(Oman)
  *
  *  ■ 연락처 / 메일 초안
- *    - CONTACT 의 email · phones · mail(subject/body) 를 수정하면 버튼에 바로 반영됩니다.
+ *    - CONTACT 의 phones · mail(to/cc/subject/body) 를 수정하면 버튼에 바로 반영됩니다.
+ *    - mail.to = 수신, mail.cc = 참조 (주소를 따옴표로 감싸 쉼표로 구분해 추가/삭제)
  *    - 메일 초안은 Outlook 호환을 위해 영문·숫자·기본 기호만 사용하세요. (줄바꿈은 \n)
  *    - {product} 자리에는 제품 카드의 'Request a quote' 를 누른 제품명이 들어갑니다.
  *
@@ -37,17 +38,19 @@ window.LXI = {
 
   CONTACT: {
     team: "Power Equipment",
-    email: "jhbaka@lxintl.co.kr",
     phones: [
       { label: "USA", number: "+1-617-991-8500", flag: "assets/img/flags/us.svg" },
       { label: "Korea", number: "+82-10-3380-3240", flag: "assets/img/flags/kr.svg" }
     ],
     mail: {
+      to: ["jhbaka@lxintl.co.kr", "maparka@lxintl.co.kr"],                                   // 수신
+      cc: ["ihpark@lxintl.co.kr", "hslee@lxintl.co.kr", "ybsonga@lxintl.co.kr",
+           "gyhwang@lxintl.co.kr", "jwkimf@lxintl.co.kr"],                                   // 참조
       subject: "Request for Quotation - {product} | LX International",
       generalProduct: "Power Equipment",                  // 제목 {product} 기본값 (상단·하단 Email 버튼)
       generalBodyProduct: "your power equipment solutions", // 본문 {product} 기본값
       body:
-        "Dear LX International Power Equipment Team,\n\n" +
+        "Dear LX International Team,\n\n" +
         "I would like to request a quotation and further information on {product}.\n\n" +
         "[Company & contact]\n" +
         "- Company:\n" +
