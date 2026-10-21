@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="-60 -40 240 160" role="img" aria-label="Taiwan"><title>Taiwan</title>
+<rect x="-60" y="-40" width="240" height="160" fill="#fe0000"/>
+<rect x="-60" y="-40" width="120" height="80" fill="#000095"/>
+<path id="r4" d="M8,0L0-30L-8,0L0,30ZM0,8L30,0L0-8L-30,0Z" fill="#fff"/>
+<use xlink:href="#r4" transform="rotate(30)"/>
+<use xlink:href="#r4" transform="rotate(60)"/>
+<circle r="17" fill="#000095"/>
+<circle r="15" fill="#fff"/>
+</svg>
