@@ -97,7 +97,7 @@ window.LXI = {
         leadTime: "18 – 36 months",
         leadTimeNote: "DDP basis"
       },
-      madeIn: ["kr", "tw", "id"]
+      madeIn: ["kr", "tw", "id", "om"]
     },
 
     "pad-mounted": {
@@ -116,7 +116,7 @@ window.LXI = {
         standards: "ANSI / IEEE / DOE / CSA",
         leadTime: "8 – 16 weeks"
       },
-      madeIn: ["kr"]
+      madeIn: ["kr", "om"]           // Data Center·ESS 의 'Distribution Transformer' 카드도 이 값을 사용
     },
 
     "pole-mounted": {
