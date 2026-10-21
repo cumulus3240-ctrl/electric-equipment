@@ -7,6 +7,7 @@
   var homeScroll = 0;
   var current = null;
   var cameFromHome = false;
+  var heroWatch = null;
 
   // ---------------------------------------------------------------- helpers
   function esc(s) {
@@ -25,15 +26,23 @@
     if (isTBD(v)) return '<span class="tbd">TBD</span>';
     return nb(esc(v)) + (note ? '<small>' + esc(note) + '</small>' : "");
   }
+  function pad2(n) {
+    return String(n).padStart(2, "0");
+  }
   function telHref(number) {
     return "tel:" + number.replace(/[^+\d]/g, "");
   }
-  // mailto with a pre-written request draft (opens Outlook or the device's default mail app)
+  // Outlook-safe mailto: ASCII only (classic Outlook garbles UTF-8 in mailto) and CRLF line breaks (RFC 6068)
+  function ascii(s) {
+    return s.replace(/[‐-―−]/g, "-").replace(/[‘’]/g, "'").replace(/[“”]/g, '"')
+      .replace(/·/g, "-").replace(/[^\t\n\r\x20-\x7E]/g, "");
+  }
   function mailHref(product) {
-    var C = D.CONTACT, name = product || C.defaultProduct;
-    return "mailto:" + C.email +
-      "?subject=" + encodeURIComponent(C.mailSubject.replace("{product}", product || "General Inquiry")) +
-      "&body=" + encodeURIComponent(C.mailBody.replace("{product}", name));
+    var M = D.CONTACT.mail;
+    var subject = M.subject.replace("{product}", product || M.generalProduct);
+    var body = M.body.replace("{product}", product ? "the " + product : M.generalBodyProduct).replace(/\r?\n/g, "\r\n");
+    return "mailto:" + D.CONTACT.email + "?subject=" + encodeURIComponent(ascii(subject)) +
+      "&body=" + encodeURIComponent(ascii(body));
   }
 
   var I = {
@@ -45,6 +54,7 @@
     download: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
     expand: '<path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5"/>',
     check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    copy: '<rect x="8.5" y="8.5" width="11" height="11" rx="2"/><path d="M15.5 8.5V6a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5"/>',
     phase: '<path d="M4 7h16M4 12h16M4 17h16"/>',
     freq: '<path d="M2.5 12c1.6-5.5 3.2-5.5 4.8 0s3.2 5.5 4.8 0 3.2-5.5 4.8 0 3.2 5.5 4.6 0"/>',
     volt: '<path d="M13 2.5L5 13.5h6.5L10.5 21.5l8-11h-6.5z"/>',
@@ -63,7 +73,8 @@
     users: '<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 4.5a3.2 3.2 0 0 1 0 6.3M21 20c0-2.6-1.6-4.8-4-5.6"/>',
     shield: '<path d="M12 3l7 3v6c0 4.4-3 7.4-7 9-4-1.6-7-4.6-7-9V6z"/>',
     truck: '<path d="M2.5 6h11v10h-11zM13.5 10h4l3 3v3h-7"/><circle cx="6.5" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
-    rocket: '<path d="M12 15l-3-3c1.5-5 4.5-8 10-9-1 5.5-4 8.5-9 10z"/><path d="M9 12l-4 1-2 3 4-.5M12 15l-1 4-3 2 .5-4"/>'
+    rocket: '<path d="M12 15l-3-3c1.5-5 4.5-8 10-9-1 5.5-4 8.5-9 10z"/><path d="M9 12l-4 1-2 3 4-.5M12 15l-1 4-3 2 .5-4"/>',
+    flag: '<path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>'
   };
   function icon(name, cls) {
     return '<svg class="ico ' + (cls || "") + '" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + I[name] + '</svg>';
@@ -78,20 +89,24 @@
       return '<img src="' + im.base + '-640.webp" srcset="' + im.base + '-640.webp 640w, ' + im.base +
         '-1200.webp 1200w" sizes="' + sizes + '"' + common + ' data-full="' + im.base + '-1200.webp">';
     }
-    // "render": full-scene image with its own backdrop
+    // "render": full scene with its own backdrop
     return '<img src="' + im.base + '-900.webp" srcset="' + im.base + '-900.webp 900w, ' + im.base +
       '-1600.webp 1600w" sizes="' + sizes + '"' + common + ' data-full="' + im.base + '-1600.webp">';
   }
 
+  function flagImg(code, w, h) {
+    var k = D.COUNTRIES[code];
+    return '<img class="flagimg" src="' + k.flag + '" alt="" width="' + (w || 21) + '" height="' + (h || 14) + '">';
+  }
   function flag(code) {
     var k = D.COUNTRIES[code];
-    return k ? '<span class="flag"><img src="' + k.flag + '" alt="" width="21" height="14">' + esc(k.name) + '</span>' : "";
+    return k ? '<span class="flag">' + flagImg(code) + esc(k.name) + '</span>' : "";
   }
   function flags(codes) {
     return codes.map(flag).join("");
   }
 
-  // ---------------------------------------------------------------- partials
+  // ---------------------------------------------------------------- shared blocks
   function footer() {
     var C = D.COMPANY;
     var offices = C.offices.map(function (o) {
@@ -112,22 +127,26 @@
   function contactBlock() {
     var C = D.CONTACT;
     var nums = C.phones.map(function (p) {
-      return '<span class="contact__num"><img src="' + p.flag + '" alt="" width="18" height="12">' + esc(p.number) + '</span>';
+      return '<span class="cnum"><img src="' + p.flag + '" alt="" width="18" height="12">' + esc(p.number) + '</span>';
     }).join("");
     var btns = [
-      '<a class="btn btn--primary" href="' + mailHref() + '">' + icon("mail") + '<span>Email us<small>' + esc(C.email) + '</small></span></a>',
-      '<button class="btn" type="button" data-call>' + icon("phone") + '<span>Call us<small class="contact__nums">' + nums + '</small></span></button>'
+      '<a class="btn btn--primary" href="' + mailHref() + '">' + icon("mail") +
+        '<span class="btn__text">Email us<small>' + esc(C.email) + '</small></span></a>',
+      '<button class="btn" type="button" data-call aria-haspopup="dialog">' + icon("phone") +
+        '<span class="btn__text">Call us<small class="cnums">' + nums + '</small></span></button>'
     ];
     if (C.brochure) {
-      btns.push('<a class="btn" href="' + esc(C.brochure) + '" target="_blank" rel="noopener">' + icon("download") + '<span>Download brochure<small>PDF · 4 MB</small></span></a>');
+      btns.push('<a class="btn" href="' + esc(C.brochure.href) + '" target="_blank" rel="noopener">' + icon("download") +
+        '<span class="btn__text">Download brochure<small>' + esc(C.brochure.note) + '</small></span></a>');
     }
-    btns.push('<a class="btn" href="' + D.COMPANY.website + '" target="_blank" rel="noopener">' + icon("globe") + '<span>Visit our website<small>lxinternational.com</small></span></a>');
+    btns.push('<a class="btn" href="' + D.COMPANY.website + '" target="_blank" rel="noopener">' + icon("globe") +
+      '<span class="btn__text">Visit our website<small>lxinternational.com</small></span></a>');
     return '' +
       '<section class="contact" id="contact" aria-labelledby="contact-title">' +
         '<div class="wrap">' +
           '<div class="contact__card">' +
             '<p class="eyebrow eyebrow--red">Contact</p>' +
-            '<h2 id="contact-title">Let’s power your next project</h2>' +
+            '<h2 id="contact-title" class="contact__title">Let’s power your next project</h2>' +
             '<p class="contact__text">Specifications, lead times and delivery options — our ' + esc(C.team) + ' team will get back to you.</p>' +
             '<div class="contact__actions">' + btns.join("") + '</div>' +
           '</div>' +
@@ -135,10 +154,13 @@
       '</section>';
   }
 
+  function statusChip(status) {
+    return '<span class="status' + (/develop/i.test(status) ? " status--dev" : "") + '">' + esc(status) + '</span>';
+  }
+
   // ---------------------------------------------------------------- home
   function solutionCard(s, i) {
     var render = /render/.test(s.cardImage) ? " sol-card__img--render" : "";
-    var media = '<img class="sol-card__img' + render + '" src="' + s.cardImage + '" alt="" loading="' + (i ? "lazy" : "eager") + '" decoding="async">';
     return '' +
       '<a class="sol-card sol-card--' + s.id + '" href="#/' + s.id + '">' +
         '<div class="sol-card__text">' +
@@ -147,45 +169,94 @@
           '<p class="sol-card__tag">' + esc(s.tagline) + '</p>' +
           '<p class="sol-card__items">' + esc(s.cardItems) + '</p>' +
         '</div>' +
-        '<div class="sol-card__media" aria-hidden="true">' + media + '</div>' +
+        '<div class="sol-card__media" aria-hidden="true">' +
+          '<img class="sol-card__img' + render + '" src="' + s.cardImage + '" alt="" loading="' + (i ? "lazy" : "eager") + '" decoding="async">' +
+        '</div>' +
         '<span class="sol-card__go" aria-hidden="true">' + icon("arrow") + '</span>' +
       '</a>';
   }
 
   function modelBlock() {
-    var M = D.MODEL;
-    var makers = M.makers.countries.map(flag).join("");
+    var M = D.MODEL, total = 0;
+    var pool = M.makers.pool.map(function (p) {
+      total += p.count;
+      return '<li>' + flagImg(p.code, 24, 16) + '<span>' + esc(D.COUNTRIES[p.code].name) + '</span><b>' + p.count + '</b></li>';
+    }).join("");
     var roles = M.lxi.roles.map(function (r) { return '<li>' + icon("check") + esc(r) + '</li>'; }).join("");
     var types = M.customers.types.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join("");
-    var regions = M.customers.regions.map(function (r) {
-      return '<span class="region' + (r.focus ? " is-focus" : "") + '">' + esc(r.name) + '</span>';
-    }).join("");
     return '' +
       '<ol class="model">' +
         '<li class="model__step">' +
           '<p class="model__head">' + icon("factory") + esc(M.makers.title) + '</p>' +
-          '<div class="model__flags">' + makers + '</div>' +
-          '<p class="model__note">' + esc(M.makers.note) + '</p>' +
+          '<p class="model__big"><strong>' + total + '</strong>' + esc(M.makers.note) + '</p>' +
+          '<ul class="pool">' + pool + '</ul>' +
         '</li>' +
         '<li class="model__step model__step--lxi">' +
-          '<p class="model__head"><img src="assets/img/brand/lx-symbol.svg" alt="" width="20" height="17">' + esc(M.lxi.title) + '</p>' +
+          '<p class="model__head"><img src="assets/img/brand/lx-symbol.svg" alt="" width="22" height="19">' + esc(M.lxi.title) + '</p>' +
           '<ul class="model__roles">' + roles + '</ul>' +
         '</li>' +
         '<li class="model__step">' +
           '<p class="model__head">' + icon("users") + esc(M.customers.title) + '</p>' +
           '<ul class="model__types">' + types + '</ul>' +
-          '<div class="model__regions">' + regions + '</div>' +
         '</li>' +
       '</ol>';
+  }
+
+  function proj(lon, lat) {
+    var M = D.MAP;
+    return [((((lon - M.lon0) % 360) + 360) % 360) / M.step * M.cell, (M.lat0 - lat) / M.step * M.cell];
+  }
+  function mapBlock() {
+    var M = D.MAP;
+    var hub = M.sources.filter(function (s) { return s.code === M.hub; })[0];
+    var h = proj(hub.lon, hub.lat);
+    function at(p) {
+      return 'left:' + (p[0] / M.width * 100).toFixed(2) + '%;top:' + (p[1] / M.height * 100).toFixed(2) + '%';
+    }
+    var routes = M.markets.map(function (m, i) {
+      var p = proj(m.lon, m.lat);
+      var dx = p[0] - h[0], dy = p[1] - h[1];
+      var lift = Math.min(170, Math.sqrt(dx * dx + dy * dy) * 0.34);
+      var cx = (h[0] + p[0]) / 2, cy = (h[1] + p[1]) / 2 - lift;
+      return '<path class="route' + (m.focus ? " route--focus" : "") + '" style="animation-delay:' + (-0.7 * i).toFixed(1) + 's" d="M' +
+        h[0].toFixed(1) + " " + h[1].toFixed(1) + "Q" + cx.toFixed(1) + " " + cy.toFixed(1) + " " + p[0].toFixed(1) + " " + p[1].toFixed(1) + '"/>';
+    }).join("");
+    var pins = M.sources.map(function (s) {
+      var p = proj(s.lon, s.lat);
+      return '<span class="pin pin--src" style="' + at(p) + '"></span>' +
+        '<span class="mlabel mlabel--src mlabel--' + (s.label || "top") + '" style="' + at(p) + '">' + esc(D.COUNTRIES[s.code].name) + '</span>';
+    }).join("") + M.markets.map(function (m) {
+      var p = proj(m.lon, m.lat);
+      return '<span class="pin pin--mkt' + (m.focus ? " is-focus" : "") + '" style="' + at(p) + '"></span>' +
+        '<span class="mlabel mlabel--' + m.label + (m.focus ? " is-focus" : "") + '" style="' + at(p) + '">' + esc(m.name) + '</span>';
+    }).join("");
+    var srcFlags = M.sources.map(function (s) { return flagImg(s.code, 18, 12); }).join("");
+    var brochure = D.CONTACT.brochure
+      ? '<a class="map__cta" href="' + esc(D.CONTACT.brochure.href) + '" target="_blank" rel="noopener">' + icon("download") + 'Download brochure<small>' + esc(D.CONTACT.brochure.note) + '</small></a>'
+      : "";
+    return '' +
+      '<div class="netmap">' +
+        '<div class="map" style="aspect-ratio:' + M.width + "/" + M.height + '" role="img" aria-label="Map: sourcing hubs in Korea, Taiwan, Indonesia and Oman serving the USA, Japan / APAC, the Middle East and Europe">' +
+          '<img class="map__dots" src="' + M.dots + '" alt="" width="' + M.width + '" height="' + M.height + '" loading="lazy" decoding="async">' +
+          '<svg class="map__routes" viewBox="0 0 ' + M.width + " " + M.height + '" preserveAspectRatio="none" aria-hidden="true">' + routes + '</svg>' +
+          pins +
+        '</div>' +
+        '<div class="map__legend">' +
+          '<span class="lg lg--src"><i></i>Sourcing hubs<span class="lg__flags">' + srcFlags + '</span></span>' +
+          '<span class="lg lg--mkt"><i></i>Key markets</span>' +
+          '<span class="lg lg--route"><i></i>LX Pantos logistics</span>' +
+        '</div>' +
+        '<p class="map__note">' + icon("ship") + '<span>' + esc(M.logistics) + '</span></p>' +
+        brochure +
+      '</div>';
   }
 
   function trackBlock() {
     return D.TRACK.map(function (t) {
       var items = t.items.map(function (it) {
-        var dev = /develop/i.test(it.status);
-        return '<li><span class="status' + (dev ? " status--dev" : "") + '">' + esc(it.status) + '</span><p>' + esc(it.text) + '</p></li>';
+        return '<li>' + statusChip(it.status) + '<p>' + esc(it.text) + '</p></li>';
       }).join("");
-      return '<article class="track"><h3 class="track__head"><img src="' + t.flag + '" alt="" width="24" height="16">' + esc(t.region) + '</h3><ul>' + items + '</ul></article>';
+      return '<article class="track"><h3 class="track__head">' + flagImg(t.flag, 24, 16) + esc(t.region) + '</h3><ul>' + items + '</ul></article>';
     }).join("");
   }
 
@@ -195,10 +266,13 @@
       return list.map(function (x) { return '<span class="scale__box ' + cls + '">' + esc(x) + '</span>'; }).join("");
     }
     return '' +
-      '<div class="scale">' +
-        '<div class="scale__row">' + boxes(S.now, "") + '</div>' +
-        '<div class="scale__arrow" aria-hidden="true"><span>Expansion</span></div>' +
-        '<div class="scale__row">' + boxes(S.next, "is-next") + '</div>' +
+      '<div class="next">' +
+        '<p class="next__label">' + icon("rocket") + '<span>Scaling up<b>' + esc(S.label) + '</b></span></p>' +
+        '<div class="scale">' +
+          '<div class="scale__row">' + boxes(S.now, "") + '</div>' +
+          '<div class="scale__arrow" aria-hidden="true"><span>Expansion</span></div>' +
+          '<div class="scale__row">' + boxes(S.next, "is-next") + '</div>' +
+        '</div>' +
       '</div>';
   }
 
@@ -208,11 +282,19 @@
       return '<li class="value"><span class="value__no">' + v.no + '</span><div><h3>' + esc(v.title) + '</h3><p>' + esc(v.text) + '</p></div></li>';
     }).join("");
     var stats = D.STATS.map(function (s) {
-      return '<div class="stat"><strong>' + esc(s.value) + (s.unit ? '<span>' + esc(s.unit) + '</span>' : "") + '</strong><span>' + esc(s.label) + '</span></div>';
+      return '<div class="stat">' + icon(s.icon, "stat__ico") + '<strong>' + esc(s.value) + (s.unit ? '<span>' + esc(s.unit) + '</span>' : "") +
+        '</strong><span class="stat__label">' + esc(s.label) + '</span></div>';
     }).join("");
-    var scope = D.SCOPE.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join("");
+    var scope = D.SCOPE.map(function (s, i) { return '<li' + (i ? "" : ' class="is-core"') + '>' + esc(s) + '</li>'; }).join("");
 
     app.innerHTML = '' +
+      '<header class="homebar" aria-hidden="true">' +
+        '<div class="wrap homebar__inner">' +
+          '<a class="homebar__logo" href="#/" tabindex="-1" data-top aria-label="LX International — back to top"><img src="assets/img/brand/lx-logo.svg" alt="LX International" width="150" height="17"></a>' +
+          '<a class="homebar__cta" href="#contact" tabindex="-1" data-scroll="contact">' + icon("mail") + 'Contact</a>' +
+        '</div>' +
+      '</header>' +
+
       '<section class="hero">' +
         '<div class="hero__bands" aria-hidden="true"><i></i><i></i></div>' +
         '<div class="wrap hero__inner">' +
@@ -223,7 +305,7 @@
           '<h1 class="hero__title">Your gateway to Asian&#8209;made power equipment</h1>' +
           '<p class="hero__lead">One partner from sourcing to field service.</p>' +
         '</div>' +
-        '<img class="hero__photo" src="assets/img/products/hero-transformer-900.webp" srcset="assets/img/products/hero-transformer-900.webp 900w, assets/img/products/hero-transformer-1600.webp 1600w" sizes="(min-width: 900px) 900px, 120vw" width="1600" height="1102" alt="" fetchpriority="high" decoding="async">' +
+        '<img class="hero__photo" src="assets/img/products/hero-transformer-900.webp" srcset="assets/img/products/hero-transformer-900.webp 900w, assets/img/products/hero-transformer-1600.webp 1600w" sizes="(min-width: 900px) 880px, 112vw" width="1600" height="1102" alt="" fetchpriority="high" decoding="async">' +
       '</section>' +
 
       '<section class="solutions" aria-label="Solutions">' +
@@ -232,10 +314,19 @@
 
       '<section class="scope" aria-labelledby="scope-title">' +
         '<div class="wrap">' +
-          '<p class="eyebrow eyebrow--red">Total provider of electrical equipment</p>' +
-          '<h2 id="scope-title" class="section-title">From factory to field, one partner</h2>' +
+          '<p class="eyebrow eyebrow--red">Business model</p>' +
+          '<h2 id="scope-title" class="section-title">Total provider of electrical equipment</h2>' +
+          '<p class="section-lead">From Asian factories to your site — one partner across sourcing, logistics and installation.</p>' +
           '<ul class="scope__list" aria-label="Scope of supply">' + scope + '</ul>' +
           modelBlock() +
+        '</div>' +
+      '</section>' +
+
+      '<section class="network" aria-labelledby="network-title">' +
+        '<div class="wrap">' +
+          '<p class="eyebrow eyebrow--red">Global network</p>' +
+          '<h2 id="network-title" class="section-title">Sourced in Asia, delivered worldwide</h2>' +
+          mapBlock() +
         '</div>' +
       '</section>' +
 
@@ -254,13 +345,26 @@
           '<p class="eyebrow eyebrow--red">Track record & pipeline</p>' +
           '<h2 id="track-title" class="section-title">Delivering today, building tomorrow</h2>' +
           '<div class="tracks__grid">' + trackBlock() + '</div>' +
-          '<div class="next">' +
-            '<p class="next__label">' + icon("rocket") + 'Scaling up · ' + esc(D.SCALE.label) + '</p>' +
-            scaleBlock() +
-          '</div>' +
+          scaleBlock() +
         '</div>' +
       '</section>' +
       contactBlock() + footer();
+
+    watchHero();
+  }
+
+  // sticky mini header on home once the hero has scrolled away
+  function watchHero() {
+    if (heroWatch) heroWatch.disconnect();
+    var bar = app.querySelector(".homebar"), hero = app.querySelector(".hero");
+    if (!bar || !hero || !("IntersectionObserver" in window)) return;
+    heroWatch = new IntersectionObserver(function (entries) {
+      var show = !entries[0].isIntersecting;
+      bar.classList.toggle("is-on", show);
+      bar.setAttribute("aria-hidden", show ? "false" : "true");
+      bar.querySelectorAll("a").forEach(function (a) { a.tabIndex = show ? 0 : -1; });
+    }, { rootMargin: "-80px 0px 0px 0px" });
+    heroWatch.observe(hero);
   }
 
   // ---------------------------------------------------------------- solution
@@ -277,11 +381,20 @@
     var cap = sp.rating !== undefined
       ? specRow("", "gauge", "Rating", val(sp.rating, sp.ratingNote))
       : specRow("", "gauge", "Capacity", val(sp.capacity, sp.capacityNote));
-    var ins = "";
-    if (sp.insulation !== undefined && sp.tap !== undefined) {
-      ins = specRow("", "drop", "Insulation", val(sp.insulation, sp.insulationNote)) + specRow("", "tap", "Tap changer", val(sp.tap));
-    } else if (sp.insulation !== undefined) {
-      ins = specRow("spec--wide", "drop", "Insulation", val(sp.insulation, sp.insulationNote));
+    var phase = specRow("", "phase", "Phase", val(sp.phase)) + specRow("", "freq", "Frequency", val(sp.frequency));
+    var grid;
+    if (sp.voltageNote && sp.voltageNote.length > 22 && sp.insulation !== undefined && sp.tap !== undefined) {
+      // long voltage list (e.g. 69/115/138/230/345/500kV): give voltage & insulation full rows, pair capacity with tap changer
+      grid = phase + cap + specRow("", "tap", "Tap changer", val(sp.tap)) +
+        specRow("spec--wide", "volt", "Voltage", val(sp.voltage, sp.voltageNote)) +
+        specRow("spec--wide", "drop", "Insulation", val(sp.insulation, sp.insulationNote));
+    } else {
+      grid = phase + specRow("", "volt", "Voltage", val(sp.voltage, sp.voltageNote)) + cap;
+      if (sp.insulation !== undefined && sp.tap !== undefined) {
+        grid += specRow("", "drop", "Insulation", val(sp.insulation, sp.insulationNote)) + specRow("", "tap", "Tap changer", val(sp.tap));
+      } else if (sp.insulation !== undefined) {
+        grid += specRow("spec--wide", "drop", "Insulation", val(sp.insulation, sp.insulationNote));
+      }
     }
     var extra = "";
     if (item.ul) extra += '<p class="product__cert">' + icon("check") + 'UL Certified</p>';
@@ -291,10 +404,10 @@
     return '' +
       '<article class="product" id="' + sol.id + '-' + item.id + '">' +
         '<div class="product__stage' + render + '" style="--ar:' + p.image.w + '/' + p.image.h + '">' +
-          '<span class="product__no">' + String(n).padStart(2, "0") + '</span>' +
+          '<span class="product__no">' + pad2(n) + '</span>' +
           ul +
           '<button class="product__zoom" type="button" aria-label="Enlarge ' + esc(title) + ' image">' +
-            productImg(p, "(min-width: 760px) 520px, 92vw", n === 1) +
+            productImg(p, "(min-width: 1080px) 340px, (min-width: 760px) 46vw, 92vw", n === 1) +
             '<span class="product__zoom-ico">' + icon("expand") + '</span>' +
           '</button>' +
         '</div>' +
@@ -303,21 +416,17 @@
           '<h3 class="product__name">' + esc(title) + '</h3>' +
           '<p class="product__headline">' + esc(p.headline) + '</p>' +
           extra +
-          '<dl class="specs">' +
-            specRow("", "phase", "Phase", val(sp.phase)) +
-            specRow("", "freq", "Frequency", val(sp.frequency)) +
-            specRow("", "volt", "Voltage", val(sp.voltage, sp.voltageNote)) +
-            cap + ins +
+          '<dl class="specs">' + grid +
             specRow("spec--wide", "std", "Standards", val(sp.standards)) +
             specRow("spec--wide spec--lead", "clock", "Lead Time", val(sp.leadTime, sp.leadTimeNote)) +
           '</dl>' +
           '<div class="madein"><span class="madein__label">' + icon("pin") + 'Made in</span>' + flags(p.madeIn) + '</div>' +
-          '<a class="product__rfq" href="' + mailHref(title) + '">' + icon("mail") + 'Request a quote' + icon("arrow", "product__rfq-go") + '</a>' +
+          '<a class="product__rfq" href="' + mailHref((item.subtitle || title) + (item.ul ? " (UL)" : "")) + '">' + icon("mail") + 'Request a quote' + icon("arrow", "product__rfq-go") + '</a>' +
         '</div>' +
       '</article>';
   }
 
-  function chain(sol) {
+  function topPanel(sol) {
     if (!sol.chain) {
       var items = sol.sections[0].items.map(function (it) {
         var p = D.PRODUCTS[it.id];
@@ -329,28 +438,39 @@
     }
     var nodes = sol.chain.map(function (c, i) {
       var inner = '<span class="node__label">' + nb(esc(c.label)) + '</span><span class="node__sub">' + nb(esc(c.sub)) + '</span>';
+      var endIcon = i === 0 ? (sol.id === "ess" ? "battery" : "grid") : (sol.id === "ess" ? "grid" : "server");
       var node = c.end
-        ? '<span class="node node--end">' + icon(i === 0 ? (sol.id === "ess" ? "battery" : "grid") : (sol.id === "ess" ? "grid" : "server")) + inner + '</span>'
+        ? '<span class="node node--end">' + icon(endIcon) + inner + '</span>'
         : '<a class="node" href="#/' + sol.id + '/' + c.ref + '" data-scroll="' + sol.id + '-' + c.ref + '">' + inner + '</a>';
       return node + (i < sol.chain.length - 1 ? '<span class="chain__arrow" aria-hidden="true"></span>' : "");
     }).join("");
     return '<div class="panel"><p class="panel__title">Where we fit in your power chain</p><div class="chain chain--' + sol.chain.length + '">' + nodes + '</div></div>';
   }
 
-  var DEFAULT_WHY = [
-    { icon: "clock", title: "Short lead times", text: "Distribution transformers in 8–16 weeks; EHV power transformers in 18–21 months." },
-    { icon: "shield", title: "Secured supply", text: "Pre-inspected, approved factories and a 100% P-Bond on every supply." },
-    { icon: "truck", title: "Door-to-site delivery", text: "LX Pantos logistics plus local partners for installation and O&M." }
-  ];
+  function proofStrip(sol) {
+    var rows = [];
+    D.TRACK.forEach(function (t) {
+      t.items.forEach(function (it) {
+        if (it.tags && it.tags.indexOf(sol.id) >= 0) rows.push('<li>' + flagImg(t.flag, 24, 16) + '<div>' + statusChip(it.status) + '<p>' + esc(it.text) + '</p></div></li>');
+      });
+    });
+    return rows.length ? '<section class="proof" aria-label="Track record"><p class="panel__title">Track record & pipeline</p><ul>' + rows.join("") + '</ul></section>' : "";
+  }
+
+  var DEFAULT_WHY = {
+    title: "Why source through LX International",
+    items: [
+      { icon: "clock", title: "Short lead times", text: "Distribution transformers in 8–16 weeks; EHV power transformers in 18–21 months." },
+      { icon: "shield", title: "Secured supply", text: "Pre-inspected, approved factories and a 100% P-Bond on every supply." },
+      { icon: "truck", title: "Door-to-site delivery", text: "LX Pantos logistics plus local partners for installation and O&M." }
+    ]
+  };
   function whyStrip(sol) {
-    var list = sol.challenges
-      ? sol.challenges.map(function (c, i) { return { icon: ["clock", "shield", "truck"][i] || "check", title: c.title, text: c.text }; })
-      : DEFAULT_WHY;
-    var head = sol.challenges ? "Key data center challenges — and how we help" : "Why source through LX International";
-    var items = list.map(function (w) {
+    var W = sol.why || DEFAULT_WHY;
+    var items = W.items.map(function (w) {
       return '<li><span class="whys__ico">' + icon(w.icon) + '</span><div><h3>' + esc(w.title) + '</h3><p>' + esc(w.text) + '</p></div></li>';
     }).join("");
-    return '<section class="whys" aria-label="' + esc(head) + '"><p class="panel__title">' + esc(head) + '</p><ul>' + items + '</ul></section>';
+    return '<section class="whys" aria-label="' + esc(W.title) + '"><p class="panel__title">' + esc(W.title) + '</p><ul>' + items + '</ul></section>';
   }
 
   function renderSolution(sol, productId) {
@@ -390,7 +510,7 @@
           '<p class="sol-hero__intro">' + esc(sol.intro) + '</p>' + stats +
         '</div>' +
       '</section>' +
-      '<div class="wrap sol-body">' + chain(sol) + sections + whyStrip(sol) + '</div>' +
+      '<div class="wrap sol-body">' + topPanel(sol) + proofStrip(sol) + sections + whyStrip(sol) + '</div>' +
       contactBlock() +
       '<section class="others" aria-label="Other solutions"><div class="wrap"><p class="eyebrow eyebrow--red">Explore more</p><div class="others__list">' + others + '</div></div></section>' +
       footer();
@@ -410,7 +530,10 @@
   function route() {
     var r = parse();
     var sol = D.SOLUTIONS.filter(function (s) { return s.id === r.sol; })[0];
-    if (r.sol === "contact") return;                      // in-page anchor, handled by click
+    if (!sol && current && r.sol && document.getElementById(r.sol)) {   // plain in-page anchor (#contact, #app)
+      scrollToId(r.sol);
+      return;
+    }
     if (sol && current === sol.id) {                      // same view: scroll only, no re-render
       var el = r.product && document.getElementById(sol.id + "-" + r.product);
       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -422,7 +545,9 @@
       renderHome();
       current = "home";
       window.scrollTo(0, fromSolution ? homeScroll : 0);
+      if (r.sol === "contact") requestAnimationFrame(function () { scrollToId("contact"); });
     } else {
+      if (heroWatch) { heroWatch.disconnect(); heroWatch = null; }
       cameFromHome = current === "home";
       if (cameFromHome) homeScroll = window.scrollY;
       renderSolution(sol, r.product);
@@ -432,66 +557,125 @@
     app.focus({ preventScroll: true });
   }
 
-  // ---------------------------------------------------------------- overlays
-  var lb = document.getElementById("lightbox");
+  function scrollToId(id) {
+    var t = document.getElementById(id);
+    if (t) t.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  // ---------------------------------------------------------------- overlays (built here, so a stale cached index.html can never break them)
+  function el(html) {
+    var t = document.createElement("template");
+    t.innerHTML = html.trim();
+    return t.content.firstChild;
+  }
+  function removeById(id) {
+    var o = document.getElementById(id);
+    if (o) o.parentNode.removeChild(o);
+  }
+  ["lightbox", "callSheet", "toast"].forEach(removeById);
+
+  var lb = el('<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Image viewer" hidden>' +
+    '<button class="lightbox__close" type="button" aria-label="Close image">&times;</button><img alt=""></div>');
+  var sheet = el('<div class="sheet" id="callSheet" role="dialog" aria-modal="true" aria-labelledby="callSheetTitle" hidden>' +
+    '<div class="sheet__panel">' +
+      '<p class="sheet__title" id="callSheetTitle">Call LX International</p>' +
+      '<p class="sheet__sub">Choose a number to call</p>' +
+      '<ul class="sheet__list">' + D.CONTACT.phones.map(function (p) {
+        return '<li class="sheet__row">' +
+          '<a class="sheet__call" href="' + telHref(p.number) + '"><img src="' + p.flag + '" alt="" width="30" height="20">' +
+            '<span class="sheet__num"><strong>' + esc(p.label) + '</strong>' + esc(p.number) + '</span>' +
+            '<span class="sheet__dial">' + icon("phone") + '</span></a>' +
+          '<button class="sheet__copy" type="button" data-copy="' + esc(p.number) + '" aria-label="Copy ' + esc(p.label) + ' number">' + icon("copy") + '</button>' +
+        '</li>';
+      }).join("") + '</ul>' +
+      '<button class="sheet__cancel" type="button" data-close>Cancel</button>' +
+    '</div></div>');
+  var toast = el('<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>');
+  document.body.appendChild(sheet);
+  document.body.appendChild(lb);
+  document.body.appendChild(toast);
   var lbImg = lb.querySelector("img");
+
+  var lastFocus = null;
+  function openLayer(layer, focusEl) {
+    lastFocus = document.activeElement;
+    layer.hidden = false;
+    document.documentElement.classList.add("no-scroll");
+    (focusEl || layer.querySelector("a[href], button")).focus();
+  }
+  function closeLayer(layer) {
+    if (layer.hidden) return;
+    layer.hidden = true;
+    if (lb.hidden && sheet.hidden) document.documentElement.classList.remove("no-scroll");
+    if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+  }
+  function trapTab(layer, e) {
+    var f = layer.querySelectorAll("a[href], button:not([disabled])");
+    if (!f.length) return;
+    var first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  }
+
   function openLightbox(img) {
     lbImg.src = img.getAttribute("data-full") || img.currentSrc || img.src;
     lbImg.alt = img.alt;
-    lb.hidden = false;
-    document.documentElement.classList.add("no-scroll");
-    lb.querySelector(".lightbox__close").focus();
-  }
-  function closeLightbox() {
-    lb.hidden = true;
-    lbImg.removeAttribute("src");
-    document.documentElement.classList.remove("no-scroll");
+    openLayer(lb, lb.querySelector(".lightbox__close"));
   }
   lb.addEventListener("click", function (e) {
     if (e.target === lbImg) return;
-    closeLightbox();
+    closeLayer(lb);
+    lbImg.removeAttribute("src");
   });
 
-  // call sheet: choose the U.S. or Korean number, then dial
-  var sheet = document.getElementById("callSheet");
-  sheet.querySelector(".sheet__list").innerHTML = D.CONTACT.phones.map(function (p) {
-    return '<a class="sheet__item" href="' + telHref(p.number) + '"><img src="' + p.flag + '" alt="" width="30" height="20">' +
-      '<span><strong>' + esc(p.label) + '</strong>' + esc(p.number) + '</span>' + icon("phone") + '</a>';
-  }).join("");
-  var lastFocus = null;
-  function openSheet() {
-    lastFocus = document.activeElement;
-    sheet.hidden = false;
-    document.documentElement.classList.add("no-scroll");
-    sheet.querySelector(".sheet__item").focus();
+  var toastTimer = null;
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toast.hidden = true; }, 1800);
   }
-  function closeSheet() {
-    sheet.hidden = true;
-    document.documentElement.classList.remove("no-scroll");
-    if (lastFocus) lastFocus.focus();
+  function copyText(text) {
+    function fallback() {
+      var ta = document.createElement("textarea");
+      ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (err) { ok = false; }
+      document.body.removeChild(ta);
+      showToast(ok ? "Number copied" : text);
+    }
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(function () { showToast("Number copied"); }, fallback);
+    } else {
+      fallback();
+    }
   }
   sheet.addEventListener("click", function (e) {
-    if (e.target === sheet || e.target.closest("[data-close]")) closeSheet();
-    else if (e.target.closest(".sheet__item")) setTimeout(closeSheet, 300);
+    var cp = e.target.closest("[data-copy]");
+    if (cp) { copyText(cp.getAttribute("data-copy")); return; }
+    if (e.target === sheet || e.target.closest("[data-close]")) closeLayer(sheet);
+    else if (e.target.closest(".sheet__call")) setTimeout(function () { closeLayer(sheet); }, 400);
   });
 
   document.addEventListener("keydown", function (e) {
-    if (e.key !== "Escape") return;
-    if (!lb.hidden) closeLightbox();
-    if (!sheet.hidden) closeSheet();
+    var layer = !lb.hidden ? lb : (!sheet.hidden ? sheet : null);
+    if (!layer) return;
+    if (e.key === "Escape") { closeLayer(layer); if (layer === lb) lbImg.removeAttribute("src"); }
+    else if (e.key === "Tab") trapTab(layer, e);
   });
 
   app.addEventListener("click", function (e) {
     var zoom = e.target.closest(".product__zoom");
     if (zoom) { openLightbox(zoom.querySelector("img")); return; }
-    if (e.target.closest("[data-call]")) { openSheet(); return; }
+    if (e.target.closest("[data-call]")) { openLayer(sheet); return; }
+    if (e.target.closest("[data-top]")) { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
     // back arrow behaves like the browser back button when we arrived from home
     if (e.target.closest("[data-back]") && cameFromHome) { e.preventDefault(); history.back(); return; }
     var sc = e.target.closest("[data-scroll]");
     if (sc) {
       e.preventDefault();
-      var t = document.getElementById(sc.getAttribute("data-scroll"));
-      if (t) t.scrollIntoView({ behavior: "smooth", block: "start" });
+      scrollToId(sc.getAttribute("data-scroll"));
     }
   });
 

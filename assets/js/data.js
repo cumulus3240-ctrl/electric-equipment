@@ -7,14 +7,18 @@
  *
  *  ■ TBD 채우기
  *    - 값이 "TBD" 인 항목은 화면에 주황색 'TBD' 표시로 나타납니다.
- *    - 확정되면 따옴표 안의 텍스트만 바꿔 주세요.  예) leadTime: "12–16 months"
+ *    - 확정되면 따옴표 안의 텍스트만 바꿔 주세요.  예) leadTime: "12 – 16 weeks"
  *
  *  ■ 생산국가(Made in) 바꾸기
  *    - madeIn: ["kr", "tw"]  →  사용 가능한 코드: kr(Korea), tw(Taiwan), id(Indonesia), om(Oman)
  *
- *  ■ 연락처
- *    - CONTACT.email / phones / mailSubject / mailBody 를 수정하면 버튼에 바로 반영됩니다.
- *    - mailBody 의 줄바꿈은 \n 으로 표시합니다.
+ *  ■ 연락처 / 메일 초안
+ *    - CONTACT 의 email · phones · mail(subject/body) 를 수정하면 버튼에 바로 반영됩니다.
+ *    - 메일 초안은 Outlook 호환을 위해 영문·숫자·기본 기호만 사용하세요. (줄바꿈은 \n)
+ *    - {product} 자리에는 제품 카드의 'Request a quote' 를 누른 제품명이 들어갑니다.
+ *
+ *  ■ 수정 후 GitHub 에 올릴 때
+ *    - index.html 안의 "?v=..." 숫자를 하나 올리면 방문자 브라우저 캐시와 상관없이 즉시 새 버전이 보입니다.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -23,7 +27,7 @@ window.LXI = {
     name: "LX International Corp.",
     website: "https://www.lxinternational.com",
     offices: [
-      { label: "Headquarters (Korea)", name: "LX International Corp.",
+      { label: "Headquarters · Korea", name: "LX International Corp.",
         address: "LX Gwanghwamun Building, 58 Saemunan-ro, Jongno-gu, Seoul 03184, Korea" },
       { label: "USA", name: "LX International (America), Inc.",
         address: "770 The City Drive South, Suite 7300, Orange, CA 92868, USA" }
@@ -38,32 +42,39 @@ window.LXI = {
       { label: "USA", number: "+1-617-991-8500", flag: "assets/img/flags/us.svg" },
       { label: "Korea", number: "+82-10-3380-3240", flag: "assets/img/flags/kr.svg" }
     ],
-    // 메일 버튼 클릭 시 자동 작성되는 초안 (제품 카드의 'Request a quote' 는 {product} 자리에 제품명이 들어갑니다)
-    mailSubject: "[Inquiry] {product} – LX International Power Equipment",
-    mailBody:
-      "Dear LX International Power Equipment Team,\n\n" +
-      "We are interested in {product} and would like to request a quotation / further information.\n\n" +
-      "■ Company / Name:\n" +
-      "■ Project name & location:\n" +
-      "■ Product & quantity:\n" +
-      "■ Key ratings (kV, MVA/kVA, phase, frequency):\n" +
-      "■ Applicable standards (e.g., ANSI/IEEE, IEC, UL, DOE):\n" +
-      "■ Required delivery date (on site):\n" +
-      "■ Delivery terms (e.g., DDP, CIF):\n" +
-      "■ Additional requirements:\n\n" +
-      "Please reach me at:\n" +
-      "■ Email:\n" +
-      "■ Phone:\n\n" +
-      "Best regards,\n",
-    defaultProduct: "your power equipment solutions",
-    brochure: "assets/docs/LX-International_Power-Distribution-Transformer.pdf"   // 제조사 로고 제거본 (null 이면 버튼 숨김)
+    mail: {
+      subject: "Request for Quotation - {product} | LX International",
+      generalProduct: "Power Equipment",                  // 제목 {product} 기본값 (상단·하단 Email 버튼)
+      generalBodyProduct: "your power equipment solutions", // 본문 {product} 기본값
+      body:
+        "Dear LX International Power Equipment Team,\n\n" +
+        "I would like to request a quotation and further information on {product}.\n\n" +
+        "[Company & contact]\n" +
+        "- Company:\n" +
+        "- Name / Title:\n" +
+        "- Phone:\n\n" +
+        "[Project]\n" +
+        "- Project name & location:\n" +
+        "- Application (Utility / Data Center / BESS / Industrial):\n" +
+        "- Required on-site delivery date:\n\n" +
+        "[Technical requirements]\n" +
+        "- Product & quantity:\n" +
+        "- Ratings (kV, MVA or kVA, phase, Hz):\n" +
+        "- Applicable standards (e.g., ANSI/IEEE, IEC, UL, DOE, CSA):\n" +
+        "- Delivery terms (e.g., DDP, CIF):\n\n" +
+        "[Additional notes]\n\n\n" +
+        "Best regards,\n"
+    },
+    brochure: { href: "assets/docs/LX-International_Power-Distribution-Transformer.pdf", note: "PDF · 4 MB" }  // 제조사 로고 제거본 (null 이면 버튼 숨김)
   },
 
   COUNTRIES: {
     kr: { name: "Korea", flag: "assets/img/flags/kr.svg" },
     tw: { name: "Taiwan", flag: "assets/img/flags/tw.svg" },
     id: { name: "Indonesia", flag: "assets/img/flags/id.svg" },
-    om: { name: "Oman", flag: "assets/img/flags/om.svg" }
+    om: { name: "Oman", flag: "assets/img/flags/om.svg" },
+    us: { name: "USA", flag: "assets/img/flags/us.svg" },
+    jp: { name: "Japan", flag: "assets/img/flags/jp.svg" }
   },
 
   /* 제품 마스터: 같은 제품이 여러 솔루션에 나오더라도 여기 한 곳만 수정하면 됩니다. */
@@ -77,7 +88,7 @@ window.LXI = {
         phase: "Single / Three-phase",
         frequency: "50 / 60Hz",
         voltage: "69 – 500kV",
-        voltageNote: "69 / 115 / 138 / 230 / 345kV",
+        voltageNote: "69 / 115 / 138 / 230 / 345 / 500kV",
         capacity: "up to 1,000MVA",
         insulation: "Oil-immersed",
         insulationNote: "Mineral oil / Natural ester",
@@ -156,9 +167,9 @@ window.LXI = {
         frequency: "50 / 60Hz",
         voltage: "24 – 38kV",
         rating: "up to 4,000A",                // GIS 는 MVA 대신 정격전류/차단전류로 표기
-        ratingNote: "40kA breaking",
+        ratingNote: "40kA short-circuit breaking",
         insulation: "SF6 / Dry air",
-        insulationNote: "Dry air: GWP 0",
+        insulationNote: "Dry-air type: GWP 0",
         standards: "IEC / IEEE (ANSI)",
         leadTime: "TBD"
       },
@@ -169,7 +180,7 @@ window.LXI = {
       name: "MV Station",
       family: "Integrated Skid / Container",
       headline: "Integrated MV skid for BESS",
-      components: ["MV switchgear", "Step-up transformer", "Aux. panels 1 & 2", "Container / skid"],
+      components: ["MV switchgear", "Step-up transformer", "Aux. panels", "Containerized skid"],
       image: { base: "assets/img/products/mv-station-render", w: 1600, h: 1073, type: "render" },
       specs: {
         phase: "Three-phase",
@@ -192,7 +203,7 @@ window.LXI = {
       tagline: "Transformers up to 500kV",
       cardItems: "Power · Pad · Pole · Dry-type",
       cardImage: "assets/img/products/power-transformer-640.webp",
-      intro: "Transformers for transmission, substations and distribution — from 500kV-class power units to pole-mounted and dry-type distribution.",
+      intro: "Transformers for transmission, substations and distribution — from 500kV-class power units to pad-mounted, pole-mounted and dry-type.",
       stats: ["up to 500kV", "up to 1,000MVA", "ANSI · IEEE · IEC"],
       sections: [
         { items: [
@@ -211,6 +222,7 @@ window.LXI = {
       cardItems: "Power TR · UL Pad-mount · MV GIS",
       cardImage: "assets/img/products/pad-mounted-640.webp",
       intro: "Reliable power from the utility interconnection to the data hall — for hyperscale, colocation and campus substations.",
+      stats: ["HV to LV", "UL-certified distribution TR", "MV GIS up to 38kV"],
       chain: [
         { label: "Utility Grid", sub: "HV", end: true },
         { label: "Power TR", sub: "HV / MV", ref: "power-transformer" },
@@ -218,11 +230,14 @@ window.LXI = {
         { label: "Dist. TR", sub: "MV / LV", ref: "pad-mounted" },
         { label: "IT Load", sub: "UPS · racks", end: true }
       ],
-      challenges: [
-        { title: "Speed to power", text: "Long transformer queues delay energization. We offer distribution transformers in 8–16 weeks and EHV units in 18–21 months." },
-        { title: "Supply-chain risk", text: "Vetted factories, pre-inspection and a 100% P-Bond on every supply." },
-        { title: "Site delivery", text: "Ocean, inland transport, installation and O&M coordinated by one partner." }
-      ],
+      why: {
+        title: "Data center challenges — and how we help",
+        items: [
+          { icon: "clock", title: "Speed to power", text: "Distribution transformers in 8–16 weeks and EHV power transformers in 18–21 months help you energize on schedule." },
+          { icon: "shield", title: "Supply-chain risk", text: "Approved factories, pre-inspection and a 100% P-Bond on every supply." },
+          { icon: "truck", title: "Delivery to site", text: "Ocean, inland transport, installation and O&M coordinated by one partner." }
+        ]
+      },
       sections: [
         { items: [
           { id: "power-transformer" },
@@ -239,6 +254,7 @@ window.LXI = {
       cardItems: "MV Station · Power TR · Pad-mount",
       cardImage: "assets/img/products/mv-station-render-900.webp",
       intro: "Integrated MV stations and transformers that connect battery energy storage to the grid.",
+      stats: ["Integrated MV station", "Power & distribution TR", "BESS supply in Japan"],
       chain: [
         { label: "Battery & PCS", sub: "LV AC", end: true },
         { label: "MV Station", sub: "LV / MV step-up", ref: "mv-station" },
@@ -255,52 +271,71 @@ window.LXI = {
     }
   ],
 
-  /* 공급 범위 (Business Roadmap – Items) */
+  /* Business Roadmap — 공급 품목 (Items) */
   SCOPE: ["Transformer", "GIS", "Switchgear", "MV Station", "Inverter", "CHP System", "Cable"],
 
-  /* 사업 모델: Manufacturer → LXI → Customer */
+  /* Business Roadmap — Manufacturer → LXI → Customer  (제조사명은 비공개, 국가별 수만 표기) */
   MODEL: {
-    makers: { title: "Manufacturers", note: "13 approved factories", countries: ["kr", "tw", "id", "om"] },
+    makers: { title: "Manufacturers", note: "approved manufacturers",
+              pool: [{ code: "kr", count: 8 }, { code: "tw", count: 3 }, { code: "id", count: 1 }, { code: "om", count: 1 }] },
     lxi: { title: "LX International", roles: ["Sourcing & contracting", "Logistics", "Installation & O&M"] },
-    customers: { title: "Customers", types: ["Utility", "Industrial — renewables, data centers, etc."],
-                 regions: [{ name: "USA", focus: true }, { name: "Japan / APAC" }, { name: "Middle East" }, { name: "Europe" }] }
+    customers: { title: "Customers", types: ["Utility", "Industrial — renewables, data centers, etc."] }
+  },
+
+  /* Global network 지도 — 좌표는 make_dotmap.py 와 같은 기준 (lon0/lat0/step/cell) */
+  MAP: {
+    lon0: -15, lat0: 66, step: 2.5, cell: 10, width: 1250, height: 440, dots: "assets/img/world-dots.svg",
+    hub: "kr",
+    sources: [
+      { code: "kr", lon: 127.0, lat: 37.5 },
+      { code: "tw", lon: 121.0, lat: 23.7 },
+      { code: "id", lon: 106.8, lat: -6.2 },
+      { code: "om", lon: 56.7, lat: 24.4 }
+    ],
+    markets: [
+      { name: "USA", lon: -98, lat: 39.5, focus: true, label: "top" },
+      { name: "Japan / APAC", lon: 139.7, lat: 35.7, label: "right" },
+      { name: "Middle East", lon: 46.7, lat: 24.7, label: "bottom" },
+      { name: "Europe", lon: 10.0, lat: 50.0, label: "bottom" }
+    ],
+    logistics: "Ocean freight delivered in-house by LX Pantos — an LX International subsidiary and global No.6 forwarder — extended to our logistics partner pool with deep transformer and project-cargo references."
   },
 
   /* 첫 화면: LXI 가치 제안 */
   VALUES: [
     { no: "01", title: "Gateway to Asian-made equipment",
-      text: "An approved pool of leading manufacturers in Korea, Taiwan, Indonesia and Oman. Factory pre-inspection and a 100% P-Bond on every supply." },
-    { no: "02", title: "Supply chain, delivered in-house",
-      text: "Ocean freight by our affiliate LX Pantos, a global top-6 forwarder, extended to specialist partners with deep transformer and project-cargo references." },
+      text: "An approved pool of 13 leading manufacturers in Korea, Taiwan, Indonesia and Oman — factory pre-inspection and a 100% P-Bond on every supply." },
+    { no: "02", title: "Logistics, delivered in-house",
+      text: "Ocean freight by LX Pantos, an LX International subsidiary and global No.6 forwarder — extended to specialist partners for transformer and project cargo." },
     { no: "03", title: "Installation, O&M and beyond",
-      text: "Local partners for installation, A/S and warranty — and project development, EPC and investment as a power & energy developer." }
+      text: "Local partners for installation, A/S and warranty — and growing into EPC and investment as a power & energy business developer." }
   ],
 
   STATS: [
-    { value: "1953", label: "Founded" },
-    { value: "13", label: "Approved manufacturers" },
-    { value: "4", label: "Sourcing countries" },
-    { value: "No.6", label: "Global forwarder (LX Pantos)" },
-    { value: "18–21", unit: "mo", label: "EHV TR lead time (OLTC)" },
-    { value: "100%", label: "P-Bond secured" }
+    { icon: "flag", value: "1953", label: "Founded" },
+    { icon: "factory", value: "13", label: "Approved manufacturers" },
+    { icon: "ship", value: "No.6", label: "Global forwarder — LX Pantos" },
+    { icon: "clock", value: "8–16", unit: "wks", label: "Distribution TR lead time" },
+    { icon: "clock", value: "18–21", unit: "mo", label: "EHV power TR lead time (OLTC)" },
+    { icon: "shield", value: "100%", label: "P-Bond secured" }
   ],
 
-  /* 실적 & 파이프라인 (Current Status & Pipeline) */
+  /* Current Status & Pipeline — tags: 해당 솔루션 페이지에도 표시 */
   TRACK: [
-    { region: "USA", flag: "assets/img/flags/us.svg", items: [
-      { status: "Delivering", text: "EHV power transformers for U.S. utilities — supply commenced in 2025" },
-      { status: "Developing", text: "Transformers for U.S. data centers" }
+    { region: "USA", flag: "us", items: [
+      { status: "Delivering", text: "EHV power transformers for U.S. utilities — supply commenced in 2025", tags: ["power", "data-center"] },
+      { status: "Developing", text: "Transformers for U.S. data centers", tags: ["data-center"] }
     ] },
-    { region: "Japan", flag: "assets/img/flags/jp.svg", items: [
-      { status: "Delivering", text: "Supply to a Japanese BESS operator and a shipyard" },
-      { status: "Developing", text: "BESS project development in Japan and Australia" }
+    { region: "Japan", flag: "jp", items: [
+      { status: "Delivering", text: "Supply to a Japanese BESS operator and a shipyard", tags: ["ess"] },
+      { status: "Developing", text: "BESS project development in Japan and Australia", tags: ["ess"] }
     ] }
   ],
 
-  /* 사업 확장 방향 (Scaling Up) */
+  /* Scaling Up */
   SCALE: {
+    label: "Power & Energy Biz. Developer",
     now: ["Electrical equipment", "Services"],
-    next: ["EPC", "Investor / Developer"],
-    label: "Power & Energy Biz. Developer"
+    next: ["EPC", "Investor / Developer"]
   }
 };
