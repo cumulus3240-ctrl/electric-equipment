@@ -73,10 +73,11 @@ window.LXI = {
     },
     whatsapp: { name: "Jayde Bak", number: "+82-10-3380-3240",
                 text: "Hello Jayde, I would like to know more about LX International's power equipment solutions." },
-    // 언어별 브로셔 (null 이면 버튼 숨김)
+    // 언어별 브로셔 (null 이면 버튼 숨김) — 일본어 브로셔 제작 전까지 일본어 화면도 영문 PDF 연결
+    // PDF 를 교체하면 ?v= 숫자도 올려 주세요 (브라우저 캐시 우회)
     brochure: {
-      en: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf", note: "PDF · 12 pages" },
-      ja: { href: "assets/docs/LX-International_Power-Equipment-Brochure_JA.pdf", note: "PDF · 12ページ" }
+      en: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf?v=7", note: "PDF · 16 pages" },
+      ja: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf?v=7", note: "PDF · 英語版 · 16ページ" }
     }
   },
 
