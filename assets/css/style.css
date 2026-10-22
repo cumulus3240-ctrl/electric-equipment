@@ -82,7 +82,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--red); outline-o
 .hero__bands i:nth-child(1) { left: 44%; width: 46%; background: linear-gradient(180deg, rgba(var(--band), .95) 0%, rgba(var(--band), .6) 45%, rgba(var(--band), 0) 80%); }
 .hero__bands i:nth-child(2) { left: 102%; width: 40%; background: linear-gradient(180deg, rgba(var(--band), .55), rgba(var(--band), 0) 70%); }
 .hero__inner { position: relative; padding-bottom: 12px; }
-.hero__top { height: 56px; display: flex; align-items: center; }
+.hero__top { height: 56px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .hero__logo { height: 19px; width: auto; display: block; }
 .hero .eyebrow { margin-top: 8px; }
 .hero__title { font-size: clamp(27px, 7.2vw, 54px); line-height: 1.13; font-weight: 800; letter-spacing: -.025em; margin-top: 8px; max-width: 15ch; }
@@ -393,9 +393,9 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--red); outline-o
 .flag { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px 5px 6px; border-radius: 999px; background: #f2f3f5; font-size: 13px; font-weight: 700; }
 
 .product__rfq {
-  display: flex; align-items: center; gap: 8px; margin-top: 16px; padding: 12px 14px; border-radius: 12px;
-  background: var(--red-50); color: var(--red); font-size: 14px; font-weight: 800; text-decoration: none;
-  -webkit-tap-highlight-color: transparent;
+  display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 16px; padding: 12px 14px; border: 0; border-radius: 12px;
+  background: var(--red-50); color: var(--red); font: inherit; font-size: 14px; font-weight: 800; text-align: left; text-decoration: none;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
 }
 .product__rfq .ico { width: 18px; height: 18px; }
 .product__rfq-go { margin-left: auto; }
@@ -522,3 +522,92 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--red); outline-o
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }
+
+/* ───────────────────────────── v6: language switch */
+.lang { display: inline-flex; flex: none; padding: 3px; border-radius: 999px; gap: 2px; }
+.lang button {
+  min-width: 40px; padding: 5px 10px; border: 0; border-radius: 999px; background: none;
+  font: inherit; font-size: 12px; font-weight: 800; line-height: 1.2; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.lang--light { background: rgba(0, 0, 0, .22); }
+.lang--light button { color: rgba(255, 255, 255, .85); }
+.lang--light button.is-on { background: #fff; color: var(--red); }
+.lang--dark { background: #f0f0f2; }
+.lang--dark button { color: var(--muted); }
+.lang--dark button.is-on { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(0, 0, 0, .12); }
+.lang--compact button { min-width: 34px; padding: 5px 8px; font-size: 11.5px; }
+.homebar__right, .appbar__right { display: flex; align-items: center; gap: 6px; }
+.appbar__inner { gap: 8px; }
+.appbar__logo { min-width: 0; }
+@media (max-width: 374px) {
+  .homebar__cta span { display: none; }
+  .homebar__cta { padding: 8px 10px; }
+  .appbar__logo img { height: 15px; }
+}
+
+/* ───────────────────────────── v6: WhatsApp + mail sheet */
+.wa-ico { width: 24px; height: 24px; flex: none; }
+.btn--wa .wa-ico { margin-left: -2px; }
+.sheet__primary {
+  display: flex; align-items: center; gap: 10px; margin-top: 14px; padding: 14px 16px; border-radius: 14px;
+  background: var(--red); color: #fff; font-size: 16px; font-weight: 800; text-decoration: none; -webkit-tap-highlight-color: transparent;
+}
+.sheet__primary .ico { width: 20px; height: 20px; }
+.sheet__primary-go { margin-left: auto; }
+.sheet__primary:active { background: var(--red-600); }
+.sheet__sub[data-mail-subject] { margin-top: 4px; overflow-wrap: anywhere; }
+.sheet__list--copy { gap: 6px; margin-top: 10px; }
+.sheet__row--copy { align-items: stretch; padding: 10px 8px 10px 14px; border-radius: 14px; background: #f5f5f6; }
+.sheet__addr { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+.sheet__addr strong { font-size: 11.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.sheet__addr span { margin-top: 2px; font-size: 13.5px; font-weight: 700; color: var(--ink); line-height: 1.35; overflow-wrap: anywhere; }
+.sheet__row--copy .sheet__copy { width: auto; min-width: 64px; padding: 0 10px; gap: 4px; display: inline-flex; align-items: center; justify-content: center; background: #fff; box-shadow: 0 0 0 1px var(--line); font: inherit; font-size: 12.5px; font-weight: 800; color: var(--ink-2); }
+.sheet__row--copy .sheet__copy .ico { width: 16px; height: 16px; }
+
+/* ───────────────────────────── v6: certifications & testing (text badges, not official marks) */
+.certsec { padding: 44px 0 4px; }
+.certs { display: grid; gap: 10px; margin-top: 18px; }
+.cert { padding: 14px 14px 12px; border-radius: 16px; background: var(--card); box-shadow: var(--shadow); }
+.cert__label { font-size: 11.5px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.cert__badges { list-style: none; padding: 0; margin: 10px 0 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.badge {
+  display: inline-flex; flex-direction: column; justify-content: center; min-width: 76px; padding: 8px 12px 7px;
+  border-radius: 10px; border: 1.5px solid #e2dcdb; background: linear-gradient(180deg, #fff, #faf8f8);
+}
+.badge b { font-size: 15px; font-weight: 800; letter-spacing: .01em; color: var(--ink); white-space: nowrap; }
+.badge span { margin-top: 1px; font-size: 11px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.certs__note { display: flex; gap: 8px; margin-top: 12px; font-size: 12.5px; line-height: 1.5; color: var(--ink-2); }
+.certs__note .ico { width: 18px; height: 18px; color: var(--red); margin-top: 1px; }
+.certpanel { margin-top: 14px; padding: 14px 12px 12px; border-radius: 18px; background: var(--card); box-shadow: var(--shadow); }
+.certs--compact { margin-top: 0; gap: 0; }
+.certs--compact .cert { padding: 8px 4px; border-radius: 0; box-shadow: none; background: none; border-top: 1px solid var(--line); }
+.certs--compact .cert:first-child { border-top: 0; padding-top: 2px; }
+.certs--compact .cert__badges { margin-top: 6px; gap: 6px; }
+.certs--compact .badge { min-width: 0; padding: 5px 9px; flex-direction: row; align-items: baseline; gap: 6px; }
+.certs--compact .badge b { font-size: 13px; }
+.certpanel .certs__note { margin: 8px 4px 2px; font-size: 12px; }
+
+@media (min-width: 760px) {
+  .certs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .certs--compact { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 24px; }
+  .certs--compact .cert:nth-child(2) { border-top: 0; padding-top: 2px; }
+  .contact__actions .btn:last-child:nth-child(odd) { grid-column: 1 / -1; }
+}
+@media (min-width: 1080px) {
+  .certs { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* ───────────────────────────── v6: Japanese typography */
+html:lang(ja) body {
+  font-family: "Pretendard JP Variable", "Pretendard Variable", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic UI", Meiryo, sans-serif;
+  line-break: strict;
+}
+html:lang(ja) h1, html:lang(ja) h2, html:lang(ja) h3, html:lang(ja) .sol-card__title, html:lang(ja) .product__name {
+  letter-spacing: 0; word-break: auto-phrase;
+}
+html:lang(ja) .hero__title { max-width: none; font-size: clamp(26px, 7vw, 52px); line-height: 1.22; }
+html:lang(ja) .sol-hero__title { font-size: clamp(26px, 7.4vw, 46px); line-height: 1.2; }
+html:lang(ja) .section-title, html:lang(ja) .why__title { line-height: 1.32; }
+html:lang(ja) .eyebrow, html:lang(ja) .panel__title, html:lang(ja) .spec dt, html:lang(ja) .madein__label, html:lang(ja) .cert__label { letter-spacing: .04em; }
+html:lang(ja) .sol-card__title { font-size: 17px; }
+html:lang(ja) .node__label { font-size: 11px; }

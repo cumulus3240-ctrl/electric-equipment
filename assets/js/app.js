@@ -1,8 +1,13 @@
-/* LX International \u00b7 Power Equipment promotion \u2014 view rendering & routing */
+/* LX International \u00b7 Power Equipment promotion \u2014 view rendering, routing, i18n (EN / JA) */
 (function () {
   "use strict";
 
-  var D = window.LXI;
+  var EN = window.LXI;                         // English master data (data.js)
+  var I18N = window.LXI_I18N || { ui: { en: {} }, content: {} };
+  var LANGS = ["en", "ja"];
+  var lang = "en";
+  var D = EN;                                  // data for the current language
+  var T = I18N.ui.en;                          // UI strings for the current language
   var app = document.getElementById("app");
   var homeScroll = 0;
   var current = null;
@@ -29,9 +34,33 @@
   function pad2(n) {
     return String(n).padStart(2, "0");
   }
+  function fmt(s, vars) {
+    return String(s).replace(/\{(\w+)\}/g, function (m, k) { return vars && k in vars ? vars[k] : m; });
+  }
+  // deep merge: objects by key, arrays by index (holes / missing keys keep the base value)
+  function merge(base, over) {
+    if (over === undefined) return base;
+    if (Array.isArray(base) && Array.isArray(over)) {
+      var n = Math.max(base.length, over.length), out = [];
+      for (var i = 0; i < n; i++) out.push(i < base.length ? merge(base[i], over[i]) : over[i]);
+      return out;
+    }
+    if (base && over && typeof base === "object" && typeof over === "object" && !Array.isArray(over)) {
+      var o = {};
+      Object.keys(base).forEach(function (k) { o[k] = base[k]; });
+      Object.keys(over).forEach(function (k) { o[k] = merge(base[k], over[k]); });
+      return o;
+    }
+    return over;
+  }
   function telHref(number) {
     return "tel:" + number.replace(/[^+\d]/g, "");
   }
+  function waHref() {
+    var W = D.CONTACT.whatsapp;
+    return "https://wa.me/" + W.number.replace(/\D/g, "") + (W.text ? "?text=" + encodeURIComponent(W.text) : "");
+  }
+
   // Outlook-safe mailto: ASCII only (classic Outlook garbles UTF-8 in mailto) and CRLF line breaks (RFC 6068)
   function ascii(s) {
     return s.replace(/[\u2010-\u2015\u2212]/g, "-").replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"')
@@ -42,13 +71,18 @@
     return (list || []).map(function (a) { return String(a).trim(); })
       .filter(function (a) { return /^[^\s@,;?&]+@[^\s@,;?&]+\.[^\s@,;?&]+$/.test(a); }).join(",");
   }
+  // mail drafts are always English (product names come from the English master data)
+  function mailParts(product) {
+    var M = EN.CONTACT.mail;
+    return {
+      subject: ascii(M.subject.replace("{product}", product || M.generalProduct)),
+      body: ascii(M.body.replace("{product}", product ? "the " + product : M.generalBodyProduct))
+    };
+  }
   function mailHref(product) {
-    var M = D.CONTACT.mail;
-    var subject = M.subject.replace("{product}", product || M.generalProduct);
-    var body = M.body.replace("{product}", product ? "the " + product : M.generalBodyProduct).replace(/\r?\n/g, "\r\n");
-    var cc = addrList(M.cc);
+    var M = EN.CONTACT.mail, p = mailParts(product), cc = addrList(M.cc);
     return "mailto:" + addrList(M.to) + "?" + (cc ? "cc=" + cc + "&" : "") +
-      "subject=" + encodeURIComponent(ascii(subject)) + "&body=" + encodeURIComponent(ascii(body));
+      "subject=" + encodeURIComponent(p.subject) + "&body=" + encodeURIComponent(p.body.replace(/\r?\n/g, "\r\n"));
   }
 
   var I = {
@@ -80,13 +114,89 @@
     shield: '<path d="M12 3l7 3v6c0 4.4-3 7.4-7 9-4-1.6-7-4.6-7-9V6z"/>',
     truck: '<path d="M2.5 6h11v10h-11zM13.5 10h4l3 3v3h-7"/><circle cx="6.5" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
     rocket: '<path d="M12 15l-3-3c1.5-5 4.5-8 10-9-1 5.5-4 8.5-9 10z"/><path d="M9 12l-4 1-2 3 4-.5M12 15l-1 4-3 2 .5-4"/>',
-    flag: '<path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>'
+    flag: '<path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>',
+    award: '<circle cx="12" cy="9" r="5.5"/><path d="M8.5 13.5L7 21l5-2.5 5 2.5-1.5-7.5"/>'
   };
   function icon(name, cls) {
     return '<svg class="ico ' + (cls || "") + '" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + I[name] + '</svg>';
   }
+  // WhatsApp glyph (green disc, white chat bubble + handset)
+  function waIcon() {
+    return '<svg class="wa-ico" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><circle cx="16" cy="16" r="16" fill="#25D366"/>' +
+      '<path fill="none" stroke="#fff" stroke-width="2.1" stroke-linejoin="round" d="M16 7.4a8.6 8.6 0 0 0-7.4 13l-1.2 4.3 4.4-1.2A8.6 8.6 0 1 0 16 7.4z"/>' +
+      '<path fill="#fff" d="M12.9 11.6c.2-.4.4-.5.7-.5h.5c.2 0 .4 0 .6.4l.8 1.8c.1.2 0 .4-.1.6l-.5.6c-.1.2-.2.3 0 .5.4.7 1 1.4 1.6 1.9.6.5 1.2.8 1.5.9.2.1.3 0 .5-.1l.6-.8c.2-.2.4-.2.6-.1l1.8.9c.3.1.4.3.4.5 0 .3-.1 1-.5 1.4-.5.5-1.3.8-2.1.6-1.2-.2-2.7-.9-4-2.1-1.4-1.3-2.3-2.8-2.5-3.9-.2-.8.1-1.5.5-2z"/></svg>';
+  }
   var SOL_ICON = { "power": "power", "data-center": "server", "ess": "battery" };
 
+  // ---------------------------------------------------------------- language
+  function detectLang() {
+    var q = new URLSearchParams(location.search).get("lang");
+    if (q && LANGS.indexOf(q) >= 0) return q;
+    try {
+      var s = localStorage.getItem("lxi-lang");
+      if (s && LANGS.indexOf(s) >= 0) return s;
+    } catch (e) { /* storage unavailable */ }
+    return "en";
+  }
+  function applyLang(l) {
+    lang = l;
+    D = l === "en" ? EN : merge(EN, (I18N.content || {})[l] || {});
+    T = l === "en" ? I18N.ui.en : merge(I18N.ui.en, I18N.ui[l] || {});
+    document.documentElement.lang = l;
+    if (l === "ja" && !document.getElementById("font-ja")) {
+      var link = document.createElement("link");
+      link.id = "font-ja"; link.rel = "stylesheet";
+      link.href = "https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-jp-dynamic-subset.min.css";
+      document.head.appendChild(link);
+    }
+  }
+  function setLang(l) {
+    if (l === lang || LANGS.indexOf(l) < 0) return;
+    try { localStorage.setItem("lxi-lang", l); } catch (e) { /* storage unavailable */ }
+    var qs = new URLSearchParams(location.search);
+    if (l === "en") qs.delete("lang"); else qs.set("lang", l);
+    var q = qs.toString();
+    history.replaceState(null, "", location.pathname + (q ? "?" + q : "") + location.hash);
+    applyLang(l);
+    buildOverlays();
+    var y = window.scrollY;
+    current = null;
+    route(true);
+    window.scrollTo(0, y);
+    trackEvent("language", { to: l });
+  }
+  function langSwitch(cls) {
+    return '<div class="lang ' + (cls || "") + '" role="group" aria-label="' + esc(T.langLabel) + '">' +
+      '<button type="button" data-lang="en" aria-pressed="' + (lang === "en") + '"' + (lang === "en" ? ' class="is-on"' : "") + '>EN</button>' +
+      '<button type="button" data-lang="ja" aria-pressed="' + (lang === "ja") + '"' + (lang === "ja" ? ' class="is-on"' : "") + ' lang="ja">\u65e5\u672c\u8a9e</button></div>';
+  }
+
+  // ---------------------------------------------------------------- analytics (Umami Cloud, cookieless; off until a website ID is set)
+  var AN_ID = ((EN.ANALYTICS || {}).umamiWebsiteId || "").trim();
+  var anQueue = [];
+  function anRun(fn) {
+    if (!AN_ID) return;
+    if (window.umami && typeof window.umami.track === "function") fn(); else anQueue.push(fn);
+  }
+  if (AN_ID) {
+    var s = document.createElement("script");
+    s.defer = true;
+    s.src = "https://cloud.umami.is/script.js";
+    s.setAttribute("data-website-id", AN_ID);
+    s.setAttribute("data-auto-track", "false");
+    s.onload = function () { anQueue.splice(0).forEach(function (fn) { fn(); }); };
+    document.head.appendChild(s);
+  }
+  function trackView(path) {
+    anRun(function () {
+      window.umami.track(function (p) { return merge(p, { url: path + location.search, title: document.title }); });
+    });
+  }
+  function trackEvent(name, data) {
+    anRun(function () { window.umami.track(name, merge(data || {}, { lang: lang })); });
+  }
+
+  // ---------------------------------------------------------------- media
   function productImg(p, sizes, eager) {
     var im = p.image, alt = esc(p.name);
     var common = ' width="' + im.w + '" height="' + im.h + '" alt="' + alt + '" decoding="async"' +
@@ -95,11 +205,9 @@
       return '<img src="' + im.base + '-640.webp" srcset="' + im.base + '-640.webp 640w, ' + im.base +
         '-1200.webp 1200w" sizes="' + sizes + '"' + common + ' data-full="' + im.base + '-1200.webp">';
     }
-    // "render": full scene with its own backdrop
     return '<img src="' + im.base + '-900.webp" srcset="' + im.base + '-900.webp 900w, ' + im.base +
       '-1600.webp 1600w" sizes="' + sizes + '"' + common + ' data-full="' + im.base + '-1600.webp">';
   }
-
   function flagImg(code, w, h) {
     var k = D.COUNTRIES[code];
     return '<img class="flagimg" src="' + k.flag + '" alt="" width="' + (w || 21) + '" height="' + (h || 14) + '">';
@@ -108,8 +216,9 @@
     var k = D.COUNTRIES[code];
     return k ? '<span class="flag">' + flagImg(code) + esc(k.name) + '</span>' : "";
   }
-  function flags(codes) {
-    return codes.map(flag).join("");
+  function brochure() {
+    var B = D.CONTACT.brochure;
+    return B ? (B[lang] || B.en) : null;
   }
 
   // ---------------------------------------------------------------- shared blocks
@@ -131,38 +240,55 @@
   }
 
   function contactBlock() {
-    var C = D.CONTACT;
+    var C = D.CONTACT, W = C.whatsapp, B = brochure();
     var nums = C.phones.map(function (p) {
       return '<span class="cnum"><img src="' + p.flag + '" alt="" width="18" height="12">' + esc(p.number) + '</span>';
     }).join("");
     var btns = [
-      '<a class="btn btn--primary" href="' + mailHref() + '">' + icon("mail") +
-        '<span class="btn__text">Email us<small class="cmails">' +
-          C.mail.to.map(function (a) { return '<span>' + esc(a) + '</span>'; }).join("") + '</small></span></a>',
+      '<button class="btn btn--primary" type="button" data-mail aria-haspopup="dialog">' + icon("mail") +
+        '<span class="btn__text">' + esc(T.emailUs) + '<small class="cmails">' +
+        C.mail.to.map(function (a) { return '<span>' + esc(a) + '</span>'; }).join("") + '</small></span></button>',
       '<button class="btn" type="button" data-call aria-haspopup="dialog">' + icon("phone") +
-        '<span class="btn__text">Call us<small class="cnums">' + nums + '</small></span></button>'
+        '<span class="btn__text">' + esc(T.callUs) + '<small class="cnums">' + nums + '</small></span></button>'
     ];
-    if (C.brochure) {
-      btns.push('<a class="btn" href="' + esc(C.brochure.href) + '" target="_blank" rel="noopener">' + icon("download") +
-        '<span class="btn__text">Download brochure<small>' + esc(C.brochure.note) + '</small></span></a>');
+    if (W) {
+      btns.push('<a class="btn btn--wa" href="' + waHref() + '" target="_blank" rel="noopener" data-ev="whatsapp">' + waIcon() +
+        '<span class="btn__text">' + esc(T.whatsapp) + '<small>' + esc(W.name) + ' \u00b7 ' + esc(W.number) + '</small></span></a>');
+    }
+    if (B) {
+      btns.push('<a class="btn" href="' + esc(B.href) + '" target="_blank" rel="noopener" data-ev="brochure">' + icon("download") +
+        '<span class="btn__text">' + esc(T.downloadBrochure) + '<small>' + esc(B.note) + '</small></span></a>');
     }
     btns.push('<a class="btn" href="' + D.COMPANY.website + '" target="_blank" rel="noopener">' + icon("globe") +
-      '<span class="btn__text">Visit our website<small>lxinternational.com</small></span></a>');
+      '<span class="btn__text">' + esc(T.visitWebsite) + '<small>lxinternational.com</small></span></a>');
     return '' +
       '<section class="contact" id="contact" aria-labelledby="contact-title">' +
         '<div class="wrap">' +
           '<div class="contact__card">' +
-            '<p class="eyebrow eyebrow--red">Contact</p>' +
-            '<h2 id="contact-title" class="contact__title">Let\u2019s power your next project</h2>' +
-            '<p class="contact__text">Specifications, lead times and delivery options \u2014 our ' + esc(C.team) + ' team will get back to you.</p>' +
+            '<p class="eyebrow eyebrow--red">' + esc(T.contact) + '</p>' +
+            '<h2 id="contact-title" class="contact__title">' + esc(T.contactTitle) + '</h2>' +
+            '<p class="contact__text">' + esc(T.contactText) + '</p>' +
             '<div class="contact__actions">' + btns.join("") + '</div>' +
           '</div>' +
         '</div>' +
       '</section>';
   }
 
-  function statusChip(status) {
-    return '<span class="status' + (/develop/i.test(status) ? " status--dev" : "") + '">' + esc(status) + '</span>';
+  function statusChip(state) {
+    var dev = state === "developing";
+    return '<span class="status' + (dev ? " status--dev" : "") + '">' + esc(dev ? T.developing : T.delivering) + '</span>';
+  }
+
+  function certBlock(compact) {
+    var C = D.CERTS;
+    var groups = C.groups.map(function (g) {
+      return '<div class="cert"><p class="cert__label">' + esc(g.label) + '</p><ul class="cert__badges">' +
+        g.items.map(function (it) {
+          return '<li class="badge"><b>' + esc(it.code) + '</b>' + (it.desc ? '<span>' + esc(it.desc) + '</span>' : "") + '</li>';
+        }).join("") + '</ul></div>';
+    }).join("");
+    return '<div class="certs' + (compact ? " certs--compact" : "") + '">' + groups + '</div>' +
+      '<p class="certs__note">' + icon("award") + '<span>' + esc(C.note) + '</span></p>';
   }
 
   // ---------------------------------------------------------------- home
@@ -214,7 +340,7 @@
     return [((((lon - M.lon0) % 360) + 360) % 360) / M.step * M.cell, (M.lat0 - lat) / M.step * M.cell];
   }
   function mapBlock() {
-    var M = D.MAP;
+    var M = D.MAP, B = brochure();
     var hub = M.sources.filter(function (s) { return s.code === M.hub; })[0];
     var h = proj(hub.lon, hub.lat);
     function at(p) {
@@ -238,30 +364,29 @@
         '<span class="mlabel mlabel--' + m.label + (m.focus ? " is-focus" : "") + '" style="' + at(p) + '">' + esc(m.name) + '</span>';
     }).join("");
     var srcFlags = M.sources.map(function (s) { return flagImg(s.code, 18, 12); }).join("");
-    var brochure = D.CONTACT.brochure
-      ? '<a class="map__cta" href="' + esc(D.CONTACT.brochure.href) + '" target="_blank" rel="noopener">' + icon("download") + 'Download brochure<small>' + esc(D.CONTACT.brochure.note) + '</small></a>'
-      : "";
+    var cta = B ? '<a class="map__cta" href="' + esc(B.href) + '" target="_blank" rel="noopener" data-ev="brochure">' + icon("download") +
+      esc(T.downloadBrochure) + '<small>' + esc(B.note) + '</small></a>' : "";
     return '' +
       '<div class="netmap">' +
-        '<div class="map" style="aspect-ratio:' + M.width + "/" + M.height + '" role="img" aria-label="Map: sourcing hubs in Korea, Taiwan, Indonesia and Oman serving the USA, Japan / APAC, the Middle East and Europe">' +
+        '<div class="map" style="aspect-ratio:' + M.width + "/" + M.height + '" role="img" aria-label="' + esc(T.mapAria) + '">' +
           '<img class="map__dots" src="' + M.dots + '" alt="" width="' + M.width + '" height="' + M.height + '" loading="lazy" decoding="async">' +
           '<svg class="map__routes" viewBox="0 0 ' + M.width + " " + M.height + '" preserveAspectRatio="none" aria-hidden="true">' + routes + '</svg>' +
           pins +
         '</div>' +
         '<div class="map__legend">' +
-          '<span class="lg lg--src"><i></i>Sourcing hubs<span class="lg__flags">' + srcFlags + '</span></span>' +
-          '<span class="lg lg--mkt"><i></i>Key markets</span>' +
-          '<span class="lg lg--route"><i></i>LX Pantos logistics</span>' +
+          '<span class="lg lg--src"><i></i>' + esc(T.lgSources) + '<span class="lg__flags">' + srcFlags + '</span></span>' +
+          '<span class="lg lg--mkt"><i></i>' + esc(T.lgMarkets) + '</span>' +
+          '<span class="lg lg--route"><i></i>' + esc(T.lgRoutes) + '</span>' +
         '</div>' +
         '<p class="map__note">' + icon("ship") + '<span>' + esc(M.logistics) + '</span></p>' +
-        brochure +
+        cta +
       '</div>';
   }
 
   function trackBlock() {
     return D.TRACK.map(function (t) {
       var items = t.items.map(function (it) {
-        return '<li>' + statusChip(it.status) + '<p>' + esc(it.text) + '</p></li>';
+        return '<li>' + statusChip(it.state) + '<p>' + esc(it.text) + '</p></li>';
       }).join("");
       return '<article class="track"><h3 class="track__head">' + flagImg(t.flag, 24, 16) + esc(t.region) + '</h3><ul>' + items + '</ul></article>';
     }).join("");
@@ -274,17 +399,17 @@
     }
     return '' +
       '<div class="next">' +
-        '<p class="next__label">' + icon("rocket") + '<span>Scaling up<b>' + esc(S.label) + '</b></span></p>' +
+        '<p class="next__label">' + icon("rocket") + '<span>' + esc(T.scalingUp) + '<b>' + esc(S.label) + '</b></span></p>' +
         '<div class="scale">' +
           '<div class="scale__row">' + boxes(S.now, "") + '</div>' +
-          '<div class="scale__arrow" aria-hidden="true"><span>Expansion</span></div>' +
+          '<div class="scale__arrow" aria-hidden="true"><span>' + esc(T.expansion) + '</span></div>' +
           '<div class="scale__row">' + boxes(S.next, "is-next") + '</div>' +
         '</div>' +
       '</div>';
   }
 
   function renderHome() {
-    document.title = "LX International | Power Equipment Solutions";
+    document.title = T.docTitleHome;
     var values = D.VALUES.map(function (v) {
       return '<li class="value"><span class="value__no">' + v.no + '</span><div><h3>' + esc(v.title) + '</h3><p>' + esc(v.text) + '</p></div></li>';
     }).join("");
@@ -297,8 +422,9 @@
     app.innerHTML = '' +
       '<header class="homebar" aria-hidden="true">' +
         '<div class="wrap homebar__inner">' +
-          '<a class="homebar__logo" href="#/" tabindex="-1" data-top aria-label="LX International \u2014 back to top"><img src="assets/img/brand/lx-logo.svg" alt="LX International" width="150" height="17"></a>' +
-          '<a class="homebar__cta" href="#contact" tabindex="-1" data-scroll="contact">' + icon("mail") + 'Contact</a>' +
+          '<a class="homebar__logo" href="#/" tabindex="-1" data-top aria-label="' + esc(T.homeTop) + '"><img src="assets/img/brand/lx-logo.svg" alt="LX International" width="150" height="17"></a>' +
+          '<div class="homebar__right">' + langSwitch("lang--dark") +
+            '<a class="homebar__cta" href="#contact" tabindex="-1" data-scroll="contact">' + icon("mail") + '<span>' + esc(T.contact) + '</span></a></div>' +
         '</div>' +
       '</header>' +
 
@@ -307,32 +433,33 @@
         '<div class="wrap hero__inner">' +
           '<div class="hero__top">' +
             '<img class="hero__logo" src="assets/img/brand/lx-logo-onred.svg" alt="LX International" width="188" height="22">' +
+            langSwitch("lang--light") +
           '</div>' +
-          '<p class="eyebrow eyebrow--light">Power Equipment Solutions</p>' +
-          '<h1 class="hero__title">Your gateway to Asian&#8209;made power equipment</h1>' +
-          '<p class="hero__lead">One partner from sourcing to field service.</p>' +
+          '<p class="eyebrow eyebrow--light">' + esc(T.heroEyebrow) + '</p>' +
+          '<h1 class="hero__title">' + esc(T.heroTitle).replace(/\n/g, "<br>") + '</h1>' +
+          '<p class="hero__lead">' + esc(T.heroLead) + '</p>' +
         '</div>' +
         '<img class="hero__photo" src="assets/img/products/hero-transformer-900.webp" srcset="assets/img/products/hero-transformer-900.webp 900w, assets/img/products/hero-transformer-1600.webp 1600w" sizes="(min-width: 900px) 880px, 112vw" width="1600" height="1102" alt="" fetchpriority="high" decoding="async">' +
       '</section>' +
 
-      '<section class="solutions" aria-label="Solutions">' +
+      '<section class="solutions" aria-label="' + esc(T.solutionsAria) + '">' +
         '<div class="wrap solutions__grid">' + D.SOLUTIONS.map(solutionCard).join("") + '</div>' +
       '</section>' +
 
       '<section class="scope" aria-labelledby="scope-title">' +
         '<div class="wrap">' +
-          '<p class="eyebrow eyebrow--red">Business model</p>' +
-          '<h2 id="scope-title" class="section-title">Total provider of electrical equipment</h2>' +
-          '<p class="section-lead">From Asian factories to your site \u2014 one partner across sourcing, logistics and installation.</p>' +
-          '<ul class="scope__list" aria-label="Scope of supply">' + scope + '</ul>' +
+          '<p class="eyebrow eyebrow--red">' + esc(T.modelEyebrow) + '</p>' +
+          '<h2 id="scope-title" class="section-title">' + esc(T.modelTitle) + '</h2>' +
+          '<p class="section-lead">' + esc(T.modelLead) + '</p>' +
+          '<ul class="scope__list" aria-label="' + esc(T.scopeAria) + '">' + scope + '</ul>' +
           modelBlock() +
         '</div>' +
       '</section>' +
 
       '<section class="network" aria-labelledby="network-title">' +
         '<div class="wrap">' +
-          '<p class="eyebrow eyebrow--red">Global network</p>' +
-          '<h2 id="network-title" class="section-title">Sourced in Asia, delivered worldwide</h2>' +
+          '<p class="eyebrow eyebrow--red">' + esc(T.netEyebrow) + '</p>' +
+          '<h2 id="network-title" class="section-title">' + esc(T.netTitle) + '</h2>' +
           mapBlock() +
         '</div>' +
       '</section>' +
@@ -340,17 +467,25 @@
       '<section class="why" aria-labelledby="why-title">' +
         '<div class="why__bg" aria-hidden="true"></div>' +
         '<div class="wrap">' +
-          '<p class="eyebrow eyebrow--light">Why LX International</p>' +
-          '<h2 id="why-title" class="why__title">Value beyond the equipment</h2>' +
+          '<p class="eyebrow eyebrow--light">' + esc(T.whyEyebrow) + '</p>' +
+          '<h2 id="why-title" class="why__title">' + esc(T.whyTitle) + '</h2>' +
           '<ol class="values">' + values + '</ol>' +
           '<div class="stats">' + stats + '</div>' +
         '</div>' +
       '</section>' +
 
+      '<section class="certsec" aria-labelledby="cert-title">' +
+        '<div class="wrap">' +
+          '<p class="eyebrow eyebrow--red">' + esc(T.certEyebrow) + '</p>' +
+          '<h2 id="cert-title" class="section-title">' + esc(T.certTitle) + '</h2>' +
+          certBlock(false) +
+        '</div>' +
+      '</section>' +
+
       '<section class="tracks" aria-labelledby="track-title">' +
         '<div class="wrap">' +
-          '<p class="eyebrow eyebrow--red">Track record & pipeline</p>' +
-          '<h2 id="track-title" class="section-title">Delivering today, building tomorrow</h2>' +
+          '<p class="eyebrow eyebrow--red">' + esc(T.trackEyebrow) + '</p>' +
+          '<h2 id="track-title" class="section-title">' + esc(T.trackTitle) + '</h2>' +
           '<div class="tracks__grid">' + trackBlock() + '</div>' +
           scaleBlock() +
         '</div>' +
@@ -369,42 +504,43 @@
       var show = !entries[0].isIntersecting;
       bar.classList.toggle("is-on", show);
       bar.setAttribute("aria-hidden", show ? "false" : "true");
-      bar.querySelectorAll("a").forEach(function (a) { a.tabIndex = show ? 0 : -1; });
+      bar.querySelectorAll("a, button").forEach(function (a) { a.tabIndex = show ? 0 : -1; });
     }, { rootMargin: "-80px 0px 0px 0px" });
     heroWatch.observe(hero);
   }
 
   // ---------------------------------------------------------------- solution
   function specRow(cls, ic, label, html) {
-    return '<div class="spec ' + cls + '"><dt>' + icon(ic) + label + '</dt><dd>' + html + '</dd></div>';
+    return '<div class="spec ' + cls + '"><dt>' + icon(ic) + esc(label) + '</dt><dd>' + html + '</dd></div>';
   }
 
-  function productCard(sol, item, n) {
-    var p = D.PRODUCTS[item.id], sp = p.specs;
+  function productCard(sol, item, enItem, n) {
+    var p = D.PRODUCTS[item.id], sp = p.specs, enP = EN.PRODUCTS[item.id];
     var title = item.title || p.name;
     var kicker = item.subtitle || p.family || "";
+    var mailName = (enItem.subtitle || enItem.title || enP.name) + (item.ul ? " (UL)" : "");
     var render = p.image.type === "render" ? " is-render" : "";
     var ul = item.ul ? '<img class="product__ul" src="assets/img/badges/ul-mark.svg" alt="UL Certified" width="56" height="56">' : "";
     var cap = sp.rating !== undefined
-      ? specRow("", "gauge", "Rating", val(sp.rating, sp.ratingNote))
-      : specRow("", "gauge", "Capacity", val(sp.capacity, sp.capacityNote));
-    var phase = specRow("", "phase", "Phase", val(sp.phase)) + specRow("", "freq", "Frequency", val(sp.frequency));
+      ? specRow("", "gauge", T.rating, val(sp.rating, sp.ratingNote))
+      : specRow("", "gauge", T.capacity, val(sp.capacity, sp.capacityNote));
+    var phase = specRow("", "phase", T.phase, val(sp.phase)) + specRow("", "freq", T.frequency, val(sp.frequency));
     var grid;
     if (sp.voltageNote && sp.voltageNote.length > 22 && sp.insulation !== undefined && sp.tap !== undefined) {
-      // long voltage list (e.g. 69/115/138/230/345/500kV): give voltage & insulation full rows, pair capacity with tap changer
-      grid = phase + cap + specRow("", "tap", "Tap changer", val(sp.tap)) +
-        specRow("spec--wide", "volt", "Voltage", val(sp.voltage, sp.voltageNote)) +
-        specRow("spec--wide", "drop", "Insulation", val(sp.insulation, sp.insulationNote));
+      // long voltage list (e.g. 69/115/138/230/345/500kV): voltage & insulation get full rows, capacity pairs with tap changer
+      grid = phase + cap + specRow("", "tap", T.tap, val(sp.tap)) +
+        specRow("spec--wide", "volt", T.voltage, val(sp.voltage, sp.voltageNote)) +
+        specRow("spec--wide", "drop", T.insulation, val(sp.insulation, sp.insulationNote));
     } else {
-      grid = phase + specRow("", "volt", "Voltage", val(sp.voltage, sp.voltageNote)) + cap;
+      grid = phase + specRow("", "volt", T.voltage, val(sp.voltage, sp.voltageNote)) + cap;
       if (sp.insulation !== undefined && sp.tap !== undefined) {
-        grid += specRow("", "drop", "Insulation", val(sp.insulation, sp.insulationNote)) + specRow("", "tap", "Tap changer", val(sp.tap));
+        grid += specRow("", "drop", T.insulation, val(sp.insulation, sp.insulationNote)) + specRow("", "tap", T.tap, val(sp.tap));
       } else if (sp.insulation !== undefined) {
-        grid += specRow("spec--wide", "drop", "Insulation", val(sp.insulation, sp.insulationNote));
+        grid += specRow("spec--wide", "drop", T.insulation, val(sp.insulation, sp.insulationNote));
       }
     }
     var extra = "";
-    if (item.ul) extra += '<p class="product__cert">' + icon("check") + 'UL Certified</p>';
+    if (item.ul) extra += '<p class="product__cert">' + icon("check") + esc(T.ulCertified) + '</p>';
     if (p.components) {
       extra += '<ul class="product__parts">' + p.components.map(function (c) { return '<li>' + esc(c) + '</li>'; }).join("") + '</ul>';
     }
@@ -413,7 +549,7 @@
         '<div class="product__stage' + render + '" style="--ar:' + p.image.w + '/' + p.image.h + '">' +
           '<span class="product__no">' + pad2(n) + '</span>' +
           ul +
-          '<button class="product__zoom" type="button" aria-label="Enlarge ' + esc(title) + ' image">' +
+          '<button class="product__zoom" type="button" aria-label="' + esc(fmt(T.enlarge, { title: title })) + '">' +
             productImg(p, "(min-width: 1080px) 340px, (min-width: 760px) 46vw, 92vw", n === 1) +
             '<span class="product__zoom-ico">' + icon("expand") + '</span>' +
           '</button>' +
@@ -424,11 +560,12 @@
           '<p class="product__headline">' + esc(p.headline) + '</p>' +
           extra +
           '<dl class="specs">' + grid +
-            specRow("spec--wide", "std", "Standards", val(sp.standards)) +
-            specRow("spec--wide spec--lead", "clock", "Lead Time", val(sp.leadTime, sp.leadTimeNote)) +
+            specRow("spec--wide", "std", T.standards, val(sp.standards)) +
+            specRow("spec--wide spec--lead", "clock", T.leadTime, val(sp.leadTime, sp.leadTimeNote)) +
           '</dl>' +
-          '<div class="madein"><span class="madein__label">' + icon("pin") + 'Made in</span>' + flags(p.madeIn) + '</div>' +
-          '<a class="product__rfq" href="' + mailHref((item.subtitle || title) + (item.ul ? " (UL)" : "")) + '">' + icon("mail") + 'Request a quote' + icon("arrow", "product__rfq-go") + '</a>' +
+          '<div class="madein"><span class="madein__label">' + icon("pin") + esc(T.madeIn) + '</span>' + p.madeIn.map(flag).join("") + '</div>' +
+          '<button class="product__rfq" type="button" data-mail="' + esc(mailName) + '" aria-haspopup="dialog">' + icon("mail") +
+            esc(T.requestQuote) + icon("arrow", "product__rfq-go") + '</button>' +
         '</div>' +
       '</article>';
   }
@@ -439,9 +576,9 @@
         var p = D.PRODUCTS[it.id];
         return '<a class="pindex__item" href="#/' + sol.id + '/' + it.id + '" data-scroll="' + sol.id + '-' + it.id + '">' +
           '<span class="pindex__img">' + productImg(p, "96px", true) + '</span>' +
-          '<span class="pindex__name">' + esc((it.title || p.name).replace(" Transformer", "")) + '</span></a>';
+          '<span class="pindex__name">' + esc(lang === "en" ? (it.title || p.name).replace(" Transformer", "") : p.name.replace("\u5909\u5727\u5668", "")) + '</span></a>';
       }).join("");
-      return '<div class="panel"><p class="panel__title">Product line-up</p><div class="pindex">' + items + '</div></div>';
+      return '<div class="panel"><p class="panel__title">' + esc(T.lineup) + '</p><div class="pindex">' + items + '</div></div>';
     }
     var nodes = sol.chain.map(function (c, i) {
       var inner = '<span class="node__label">' + nb(esc(c.label)) + '</span><span class="node__sub">' + nb(esc(c.sub)) + '</span>';
@@ -451,48 +588,41 @@
         : '<a class="node" href="#/' + sol.id + '/' + c.ref + '" data-scroll="' + sol.id + '-' + c.ref + '">' + inner + '</a>';
       return node + (i < sol.chain.length - 1 ? '<span class="chain__arrow" aria-hidden="true"></span>' : "");
     }).join("");
-    return '<div class="panel"><p class="panel__title">Where we fit in your power chain</p><div class="chain chain--' + sol.chain.length + '">' + nodes + '</div></div>';
+    return '<div class="panel"><p class="panel__title">' + esc(T.chainTitle) + '</p><div class="chain chain--' + sol.chain.length + '">' + nodes + '</div></div>';
   }
 
   function proofStrip(sol) {
     var rows = [];
     D.TRACK.forEach(function (t) {
       t.items.forEach(function (it) {
-        if (it.tags && it.tags.indexOf(sol.id) >= 0) rows.push('<li>' + flagImg(t.flag, 24, 16) + '<div>' + statusChip(it.status) + '<p>' + esc(it.text) + '</p></div></li>');
+        if (it.tags && it.tags.indexOf(sol.id) >= 0) rows.push('<li>' + flagImg(t.flag, 24, 16) + '<div>' + statusChip(it.state) + '<p>' + esc(it.text) + '</p></div></li>');
       });
     });
-    return rows.length ? '<section class="proof" aria-label="Track record"><p class="panel__title">Track record & pipeline</p><ul>' + rows.join("") + '</ul></section>' : "";
+    return rows.length ? '<section class="proof" aria-label="' + esc(T.trackPanel) + '"><p class="panel__title">' + esc(T.trackPanel) + '</p><ul>' + rows.join("") + '</ul></section>' : "";
   }
 
-  var DEFAULT_WHY = {
-    title: "Why source through LX International",
-    items: [
-      { icon: "clock", title: "Short lead times", text: "Distribution transformers in 8\u201316 weeks; EHV power transformers in 18\u201321 months." },
-      { icon: "shield", title: "Secured supply", text: "Pre-inspected, approved factories and a 100% P-Bond on every supply." },
-      { icon: "truck", title: "Door-to-site delivery", text: "LX Pantos logistics plus local partners for installation and O&M." }
-    ]
-  };
   function whyStrip(sol) {
-    var W = sol.why || DEFAULT_WHY;
+    var W = sol.why || T.whyDefault;
     var items = W.items.map(function (w) {
-      return '<li><span class="whys__ico">' + icon(w.icon) + '</span><div><h3>' + esc(w.title) + '</h3><p>' + esc(w.text) + '</p></div></li>';
+      return '<li><span class="whys__ico">' + icon(w.icon || "check") + '</span><div><h3>' + esc(w.title) + '</h3><p>' + esc(w.text) + '</p></div></li>';
     }).join("");
     return '<section class="whys" aria-label="' + esc(W.title) + '"><p class="panel__title">' + esc(W.title) + '</p><ul>' + items + '</ul></section>';
   }
 
   function renderSolution(sol, productId) {
-    document.title = sol.title + " | LX International";
+    var enSol = EN.SOLUTIONS.filter(function (s) { return s.id === sol.id; })[0];
+    document.title = fmt(T.docTitleSolution, { title: sol.title });
     var n = 0;
-    var sections = sol.sections.map(function (sec) {
-      var cards = sec.items.map(function (it) { n += 1; return productCard(sol, it, n); }).join("");
+    var sections = sol.sections.map(function (sec, si) {
+      var cards = sec.items.map(function (it, ii) { n += 1; return productCard(sol, it, enSol.sections[si].items[ii], n); }).join("");
       return '<section class="psection">' +
         (sec.title ? '<h2 class="psection__title"><span>' + esc(sec.title) + '</span></h2>' : "") +
         '<div class="products">' + cards + '</div></section>';
     }).join("");
-    var tabs = D.SOLUTIONS.map(function (s) {
+    var tabs = D.SOLUTIONS.map(function (s, i) {
       var on = s.id === sol.id;
-      return '<a class="tab' + (on ? " is-active" : "") + '" href="#/' + s.id + '"' + (on ? ' aria-current="page"' : "") + '>' +
-        esc(s.title.replace(" Solution", "")) + '</a>';
+      var short = lang === "en" ? s.title.replace(" Solution", "") : s.title.replace(/\s*\u30bd\u30ea\u30e5\u30fc\u30b7\u30e7\u30f3$/, "");
+      return '<a class="tab' + (on ? " is-active" : "") + '" href="#/' + s.id + '"' + (on ? ' aria-current="page"' : "") + '>' + esc(short) + '</a>';
     }).join("");
     var others = D.SOLUTIONS.filter(function (s) { return s.id !== sol.id; }).map(function (s) {
       return '<a class="other" href="#/' + s.id + '"><span class="other__no">' + icon(SOL_ICON[s.id]) + s.index + '</span>' +
@@ -503,23 +633,26 @@
     app.innerHTML = '' +
       '<header class="appbar">' +
         '<div class="wrap appbar__inner">' +
-          '<a class="appbar__btn" href="#/" data-back aria-label="Back to all solutions">' + icon("back") + '</a>' +
-          '<a class="appbar__logo" href="#/" aria-label="LX International home"><img src="assets/img/brand/lx-logo.svg" alt="LX International" width="150" height="17"></a>' +
-          '<a class="appbar__btn" href="#contact" data-scroll="contact" aria-label="Contact">' + icon("mail") + '</a>' +
+          '<a class="appbar__btn" href="#/" data-back aria-label="' + esc(T.backAria) + '">' + icon("back") + '</a>' +
+          '<a class="appbar__logo" href="#/" aria-label="' + esc(T.homeAria) + '"><img src="assets/img/brand/lx-logo.svg" alt="LX International" width="150" height="17"></a>' +
+          '<div class="appbar__right">' + langSwitch("lang--dark lang--compact") +
+            '<a class="appbar__btn" href="#contact" data-scroll="contact" aria-label="' + esc(T.contact) + '">' + icon("mail") + '</a></div>' +
         '</div>' +
       '</header>' +
       '<section class="sol-hero sol-hero--' + sol.id + '">' +
         '<div class="hero__bands" aria-hidden="true"><i></i><i></i></div>' +
         '<div class="wrap sol-hero__inner">' +
-          '<nav class="tabs" aria-label="Solutions">' + tabs + '</nav>' +
-          '<p class="eyebrow eyebrow--light">' + icon(SOL_ICON[sol.id]) + 'Solution ' + sol.index + '</p>' +
+          '<nav class="tabs" aria-label="' + esc(T.solutionsAria) + '">' + tabs + '</nav>' +
+          '<p class="eyebrow eyebrow--light">' + icon(SOL_ICON[sol.id]) + esc(fmt(T.solutionN, { n: sol.index })) + '</p>' +
           '<h1 class="sol-hero__title">' + esc(sol.title) + '</h1>' +
           '<p class="sol-hero__intro">' + esc(sol.intro) + '</p>' + stats +
         '</div>' +
       '</section>' +
-      '<div class="wrap sol-body">' + topPanel(sol) + proofStrip(sol) + sections + whyStrip(sol) + '</div>' +
+      '<div class="wrap sol-body">' + topPanel(sol) + proofStrip(sol) + sections + whyStrip(sol) +
+        '<section class="certpanel" aria-label="' + esc(T.certEyebrow) + '"><p class="panel__title">' + esc(T.certEyebrow) + '</p>' + certBlock(true) + '</section>' +
+      '</div>' +
       contactBlock() +
-      '<section class="others" aria-label="Other solutions"><div class="wrap"><p class="eyebrow eyebrow--red">Explore more</p><div class="others__list">' + others + '</div></div></section>' +
+      '<section class="others" aria-label="' + esc(T.othersAria) + '"><div class="wrap"><p class="eyebrow eyebrow--red">' + esc(T.exploreMore) + '</p><div class="others__list">' + others + '</div></div></section>' +
       footer();
 
     if (productId) {
@@ -534,7 +667,7 @@
     return { sol: parts[0] || "", product: parts[1] || "" };
   }
 
-  function route() {
+  function route(forced) {
     var r = parse();
     var sol = D.SOLUTIONS.filter(function (s) { return s.id === r.sol; })[0];
     if (!sol && current && r.sol && document.getElementById(r.sol)) {   // plain in-page anchor (#contact, #app)
@@ -551,17 +684,21 @@
       var fromSolution = current && current !== "home";
       renderHome();
       current = "home";
-      window.scrollTo(0, fromSolution ? homeScroll : 0);
+      if (!forced) window.scrollTo(0, fromSolution ? homeScroll : 0);
       if (r.sol === "contact") requestAnimationFrame(function () { scrollToId("contact"); });
+      if (!forced) trackView("/");
     } else {
       if (heroWatch) { heroWatch.disconnect(); heroWatch = null; }
-      cameFromHome = current === "home";
-      if (cameFromHome) homeScroll = window.scrollY;
+      if (!forced) {
+        cameFromHome = current === "home";
+        if (cameFromHome) homeScroll = window.scrollY;
+      }
       renderSolution(sol, r.product);
       current = sol.id;
-      if (!r.product) window.scrollTo(0, 0);
+      if (!r.product && !forced) window.scrollTo(0, 0);
+      if (!forced) trackView("/" + sol.id);
     }
-    app.focus({ preventScroll: true });
+    if (!forced) app.focus({ preventScroll: true });
   }
 
   function scrollToId(id) {
@@ -569,39 +706,91 @@
     if (t) t.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  // ---------------------------------------------------------------- overlays (built here, so a stale cached index.html can never break them)
+  // ---------------------------------------------------------------- overlays (built in JS, so a stale cached index.html can never break them)
   function el(html) {
     var t = document.createElement("template");
     t.innerHTML = html.trim();
     return t.content.firstChild;
   }
-  function removeById(id) {
-    var o = document.getElementById(id);
-    if (o) o.parentNode.removeChild(o);
-  }
-  ["lightbox", "callSheet", "toast"].forEach(removeById);
+  var lb, lbImg, callSheet, mailSheet, toast, mailState = { product: "" };
 
-  var lb = el('<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Image viewer" hidden>' +
-    '<button class="lightbox__close" type="button" aria-label="Close image">&times;</button><img alt=""></div>');
-  var sheet = el('<div class="sheet" id="callSheet" role="dialog" aria-modal="true" aria-labelledby="callSheetTitle" hidden>' +
-    '<div class="sheet__panel">' +
-      '<p class="sheet__title" id="callSheetTitle">Call LX International</p>' +
-      '<p class="sheet__sub">Choose a number to call</p>' +
-      '<ul class="sheet__list">' + D.CONTACT.phones.map(function (p) {
-        return '<li class="sheet__row">' +
-          '<a class="sheet__call" href="' + telHref(p.number) + '"><img src="' + p.flag + '" alt="" width="30" height="20">' +
-            '<span class="sheet__num"><strong>' + esc(p.label) + '</strong>' + esc(p.number) + '</span>' +
-            '<span class="sheet__dial">' + icon("phone") + '</span></a>' +
-          '<button class="sheet__copy" type="button" data-copy="' + esc(p.number) + '" aria-label="Copy ' + esc(p.label) + ' number">' + icon("copy") + '</button>' +
-        '</li>';
-      }).join("") + '</ul>' +
-      '<button class="sheet__cancel" type="button" data-close>Cancel</button>' +
-    '</div></div>');
-  var toast = el('<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>');
-  document.body.appendChild(sheet);
-  document.body.appendChild(lb);
-  document.body.appendChild(toast);
-  var lbImg = lb.querySelector("img");
+  function buildOverlays() {
+    ["lightbox", "callSheet", "mailSheet", "toast"].forEach(function (id) {
+      var o = document.getElementById(id);
+      if (o) o.parentNode.removeChild(o);
+    });
+    var M = EN.CONTACT.mail;
+    lb = el('<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="' + esc(T.imageViewer) + '" hidden>' +
+      '<button class="lightbox__close" type="button" aria-label="' + esc(T.closeImage) + '">&times;</button><img alt=""></div>');
+    callSheet = el('<div class="sheet" id="callSheet" role="dialog" aria-modal="true" aria-labelledby="callSheetTitle" hidden>' +
+      '<div class="sheet__panel">' +
+        '<p class="sheet__title" id="callSheetTitle">' + esc(T.callTitle) + '</p>' +
+        '<p class="sheet__sub">' + esc(T.callSub) + '</p>' +
+        '<ul class="sheet__list">' + D.CONTACT.phones.map(function (p) {
+          return '<li class="sheet__row">' +
+            '<a class="sheet__call" href="' + telHref(p.number) + '" data-ev="call" data-ev-line="' + esc(p.label) + '"><img src="' + p.flag + '" alt="" width="30" height="20">' +
+              '<span class="sheet__num"><strong>' + esc(p.label) + '</strong>' + esc(p.number) + '</span>' +
+              '<span class="sheet__dial">' + icon("phone") + '</span></a>' +
+            '<button class="sheet__copy" type="button" data-copy="' + esc(p.number) + '" data-toast="' + esc(T.numberCopied) + '" aria-label="' + esc(fmt(T.copyNumber, { label: p.label })) + '">' + icon("copy") + '</button>' +
+          '</li>';
+        }).join("") + '</ul>' +
+        '<button class="sheet__cancel" type="button" data-close>' + esc(T.cancel) + '</button>' +
+      '</div></div>');
+    mailSheet = el('<div class="sheet" id="mailSheet" role="dialog" aria-modal="true" aria-labelledby="mailSheetTitle" hidden>' +
+      '<div class="sheet__panel">' +
+        '<p class="sheet__title" id="mailSheetTitle">' + esc(T.mailTitle) + '</p>' +
+        '<p class="sheet__sub" data-mail-subject></p>' +
+        '<a class="sheet__primary" href="#" data-mail-open>' + icon("mail") + '<span>' + esc(T.mailOpen) + '</span>' + icon("arrow", "sheet__primary-go") + '</a>' +
+        '<ul class="sheet__list sheet__list--copy">' +
+          copyRow("to", T.mailTo, M.to.join(", ")) +
+          copyRow("cc", T.mailCc, M.cc.join(", ")) +
+          copyRow("msg", T.mailMsg, T.mailMsgDesc) +
+        '</ul>' +
+        '<button class="sheet__cancel" type="button" data-close>' + esc(T.cancel) + '</button>' +
+      '</div></div>');
+    toast = el('<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>');
+    [callSheet, mailSheet, lb, toast].forEach(function (n) { document.body.appendChild(n); });
+    lbImg = lb.querySelector("img");
+
+    lb.addEventListener("click", function (e) {
+      if (e.target === lbImg) return;
+      closeLayer(lb);
+      lbImg.removeAttribute("src");
+    });
+    [callSheet, mailSheet].forEach(function (sheet) {
+      sheet.addEventListener("click", function (e) {
+        var cp = e.target.closest("[data-copy]");
+        if (cp) { copyText(cp.getAttribute("data-copy"), cp.getAttribute("data-toast")); trackEvent("copy", { what: cp.getAttribute("data-what") || "number" }); return; }
+        var cm = e.target.closest("[data-copy-mail]");
+        if (cm) { copyMail(cm.getAttribute("data-copy-mail")); return; }
+        if (e.target === sheet || e.target.closest("[data-close]")) { closeLayer(sheet); return; }
+        var go = e.target.closest(".sheet__call, [data-mail-open]");
+        if (go) {
+          if (go.hasAttribute("data-mail-open")) trackEvent("email_app", { product: mailState.product || "general" });
+          else trackEvent("call", { line: go.getAttribute("data-ev-line") });
+          setTimeout(function () { closeLayer(sheet); }, 400);
+        }
+      });
+    });
+  }
+  function copyRow(key, label, value) {
+    return '<li class="sheet__row sheet__row--copy"><div class="sheet__addr"><strong>' + esc(label) + '</strong><span>' + esc(value) + '</span></div>' +
+      '<button class="sheet__copy" type="button" data-copy-mail="' + key + '" aria-label="' + esc(fmt(T.copyWhat, { what: label })) + '">' + icon("copy") + '<span>' + esc(T.copy) + '</span></button></li>';
+  }
+  function copyMail(key) {
+    var M = EN.CONTACT.mail, p = mailParts(mailState.product);
+    if (key === "to") copyText(M.to.join(", "), T.addrCopied);
+    else if (key === "cc") copyText(M.cc.join(", "), T.ccCopied);
+    else copyText("Subject: " + p.subject + "\n\n" + p.body, T.msgCopied);
+    trackEvent("email_copy", { part: key });
+  }
+  function openMail(product) {
+    mailState.product = product || "";
+    mailSheet.querySelector("[data-mail-open]").setAttribute("href", mailHref(product));
+    mailSheet.querySelector("[data-mail-subject]").textContent = mailParts(product).subject;
+    openLayer(mailSheet);
+    trackEvent(product ? "quote" : "email", product ? { product: product } : {});
+  }
 
   var lastFocus = null;
   function openLayer(layer, focusEl) {
@@ -613,8 +802,11 @@
   function closeLayer(layer) {
     if (layer.hidden) return;
     layer.hidden = true;
-    if (lb.hidden && sheet.hidden) document.documentElement.classList.remove("no-scroll");
+    if (lb.hidden && callSheet.hidden && mailSheet.hidden) document.documentElement.classList.remove("no-scroll");
     if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+  }
+  function openLayerNow() {
+    return [lb, callSheet, mailSheet].filter(function (l) { return l && !l.hidden; })[0] || null;
   }
   function trapTab(layer, e) {
     var f = layer.querySelectorAll("a[href], button:not([disabled])");
@@ -623,17 +815,11 @@
     if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   }
-
   function openLightbox(img) {
     lbImg.src = img.getAttribute("data-full") || img.currentSrc || img.src;
     lbImg.alt = img.alt;
     openLayer(lb, lb.querySelector(".lightbox__close"));
   }
-  lb.addEventListener("click", function (e) {
-    if (e.target === lbImg) return;
-    closeLayer(lb);
-    lbImg.removeAttribute("src");
-  });
 
   var toastTimer = null;
   function showToast(msg) {
@@ -642,7 +828,7 @@
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { toast.hidden = true; }, 1800);
   }
-  function copyText(text) {
+  function copyText(text, okMsg) {
     function fallback() {
       var ta = document.createElement("textarea");
       ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
@@ -650,32 +836,32 @@
       var ok = false;
       try { ok = document.execCommand("copy"); } catch (err) { ok = false; }
       document.body.removeChild(ta);
-      showToast(ok ? "Number copied" : text);
+      showToast(ok ? okMsg : text.split("\n")[0]);
     }
     if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(text).then(function () { showToast("Number copied"); }, fallback);
+      navigator.clipboard.writeText(text).then(function () { showToast(okMsg); }, fallback);
     } else {
       fallback();
     }
   }
-  sheet.addEventListener("click", function (e) {
-    var cp = e.target.closest("[data-copy]");
-    if (cp) { copyText(cp.getAttribute("data-copy")); return; }
-    if (e.target === sheet || e.target.closest("[data-close]")) closeLayer(sheet);
-    else if (e.target.closest(".sheet__call")) setTimeout(function () { closeLayer(sheet); }, 400);
-  });
 
   document.addEventListener("keydown", function (e) {
-    var layer = !lb.hidden ? lb : (!sheet.hidden ? sheet : null);
+    var layer = openLayerNow();
     if (!layer) return;
     if (e.key === "Escape") { closeLayer(layer); if (layer === lb) lbImg.removeAttribute("src"); }
     else if (e.key === "Tab") trapTab(layer, e);
   });
 
   app.addEventListener("click", function (e) {
+    var lg = e.target.closest("[data-lang]");
+    if (lg) { setLang(lg.getAttribute("data-lang")); return; }
     var zoom = e.target.closest(".product__zoom");
     if (zoom) { openLightbox(zoom.querySelector("img")); return; }
-    if (e.target.closest("[data-call]")) { openLayer(sheet); return; }
+    var mail = e.target.closest("[data-mail]");
+    if (mail) { openMail(mail.getAttribute("data-mail")); return; }
+    if (e.target.closest("[data-call]")) { openLayer(callSheet); return; }
+    var ev = e.target.closest("[data-ev]");
+    if (ev) trackEvent(ev.getAttribute("data-ev"), {});
     if (e.target.closest("[data-top]")) { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); return; }
     // back arrow behaves like the browser back button when we arrived from home
     if (e.target.closest("[data-back]") && cameFromHome) { e.preventDefault(); history.back(); return; }
@@ -686,7 +872,9 @@
     }
   });
 
+  applyLang(detectLang());
+  buildOverlays();
   if ("scrollRestoration" in history) history.scrollRestoration = "manual";
-  window.addEventListener("hashchange", route);
-  route();
+  window.addEventListener("hashchange", function () { route(false); });
+  route(false);
 })();

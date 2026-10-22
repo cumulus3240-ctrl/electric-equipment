@@ -18,6 +18,9 @@
  *    - 메일 초안은 Outlook 호환을 위해 영문·숫자·기본 기호만 사용하세요. (줄바꿈은 \n)
  *    - {product} 자리에는 제품 카드의 'Request a quote' 를 누른 제품명이 들어갑니다.
  *
+ *  ■ 일본어 버전
+ *    - 일본어 문구는 assets/js/i18n.js 에 있습니다. 이 파일(영문)을 고치면 i18n.js 의 같은 항목도 함께 고쳐 주세요.
+ *
  *  ■ 수정 후 GitHub 에 올릴 때
  *    - index.html 안의 "?v=..." 숫자를 하나 올리면 방문자 브라우저 캐시와 상관없이 즉시 새 버전이 보입니다.
  * ─────────────────────────────────────────────────────────────────────────────
@@ -68,7 +71,13 @@ window.LXI = {
         "[Additional notes]\n\n\n" +
         "Best regards,\n"
     },
-    brochure: { href: "assets/docs/LX-International_Power-Distribution-Transformer.pdf", note: "PDF · 4 MB" }  // 제조사 로고 제거본 (null 이면 버튼 숨김)
+    whatsapp: { name: "Jayde Bak", number: "+82-10-3380-3240",
+                text: "Hello Jayde, I would like to know more about LX International's power equipment solutions." },
+    // 언어별 브로셔 (null 이면 버튼 숨김)
+    brochure: {
+      en: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf", note: "PDF · 12 pages" },
+      ja: { href: "assets/docs/LX-International_Power-Equipment-Brochure_JA.pdf", note: "PDF · 12ページ" }
+    }
   },
 
   COUNTRIES: {
@@ -323,17 +332,31 @@ window.LXI = {
     { icon: "shield", value: "100%", label: "P-Bond secured" }
   ],
 
-  /* Current Status & Pipeline — tags: 해당 솔루션 페이지에도 표시 */
+  /* Current Status & Pipeline — state: delivering | developing, tags: 해당 솔루션 페이지에도 표시 */
   TRACK: [
     { region: "USA", flag: "us", items: [
-      { status: "Delivering", text: "EHV power transformers for U.S. utilities — supply commenced in 2025", tags: ["power", "data-center"] },
-      { status: "Developing", text: "Transformers for U.S. data centers", tags: ["data-center"] }
+      { state: "delivering", text: "EHV power transformers for U.S. utilities — supply commenced in 2025", tags: ["power", "data-center"] },
+      { state: "developing", text: "Transformers for U.S. data centers", tags: ["data-center"] }
     ] },
     { region: "Japan", flag: "jp", items: [
-      { status: "Delivering", text: "Supply to a Japanese BESS operator and a shipyard", tags: ["ess"] },
-      { status: "Developing", text: "BESS project development in Japan and Australia", tags: ["ess"] }
+      { state: "delivering", text: "Supply to a Japanese BESS operator and a shipyard", tags: ["ess"] },
+      { state: "developing", text: "BESS project development in Japan and Australia", tags: ["ess"] }
     ] }
   ],
+
+  /* 인증·시험 대응 (공식 로고 대신 텍스트 배지 — 인증서·성적서는 승인 제조사가 보유) */
+  CERTS: {
+    groups: [
+      { label: "Type tests", items: [{ code: "KEMA", desc: "Netherlands" }, { code: "KERI", desc: "Korea" }] },
+      { label: "Management systems", items: [{ code: "ISO 9001", desc: "Quality" }, { code: "ISO 14001", desc: "Environment" }, { code: "ISO 45001", desc: "Health & safety" }] },
+      { label: "Product certification", items: [{ code: "UL", desc: "USA" }, { code: "CSA", desc: "Canada" }] },
+      { label: "Design standards", items: [{ code: "IEEE C57", desc: "Transformers" }, { code: "IEC 60076", desc: "Transformers" }, { code: "ANSI", desc: "USA" }, { code: "DOE", desc: "Efficiency" }] }
+    ],
+    note: "Available through our approved manufacturers — certificates and type-test reports are provided per project."
+  },
+
+  /* 방문 통계 (Umami Cloud) — Website ID 를 넣으면 자동으로 켜집니다. 비워두면 통계 미사용 */
+  ANALYTICS: { umamiWebsiteId: "" },
 
   /* Scaling Up */
   SCALE: {
