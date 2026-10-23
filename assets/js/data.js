@@ -76,8 +76,8 @@ window.LXI = {
     // 언어별 브로셔 (null 이면 버튼 숨김) — 일본어 브로셔 제작 전까지 일본어 화면도 영문 PDF 연결
     // PDF 를 교체하면 ?v= 숫자도 올려 주세요 (브라우저 캐시 우회)
     brochure: {
-      en: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf?v=7", note: "PDF · 16 pages" },
-      ja: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf?v=7", note: "PDF · 英語版 · 16ページ" }
+      en: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf?v=8", note: "PDF · 16 pages" },
+      ja: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf?v=8", note: "PDF · 英語版 · 16ページ" }
     }
   },
 
@@ -290,7 +290,7 @@ window.LXI = {
   /* Business Roadmap — Manufacturer → LXI → Customer  (제조사명은 비공개, 국가별 수만 표기) */
   MODEL: {
     makers: { title: "Manufacturers", note: "approved manufacturers",
-              pool: [{ code: "kr", count: 8 }, { code: "tw", count: 3 }, { code: "id", count: 1 }, { code: "om", count: 1 }] },
+              pool: [{ code: "kr", count: 8 }, { code: "tw", count: 3 }, { code: "id", count: 2 }, { code: "om", count: 1 }] },
     lxi: { title: "LX International", roles: ["Sourcing & contracting", "Logistics", "Installation & O&M"] },
     customers: { title: "Customers", types: ["Utility", "Industrial — renewables, data centers, etc."] }
   },
@@ -317,7 +317,7 @@ window.LXI = {
   /* 첫 화면: LXI 가치 제안 */
   VALUES: [
     { no: "01", title: "Gateway to Asian-made equipment",
-      text: "An approved pool of 13 leading manufacturers in Korea, Taiwan, Indonesia and Oman — factory pre-inspection and a 100% P-Bond on every supply." },
+      text: "An approved pool of 14 leading manufacturers in Korea, Taiwan, Indonesia and Oman — factory pre-inspection and a 100% P-Bond on every supply." },
     { no: "02", title: "Logistics, delivered in-house",
       text: "Ocean freight by LX Pantos, an LX International subsidiary and global No.6 forwarder — extended to specialist partners for transformer and project cargo." },
     { no: "03", title: "Installation, O&M and beyond",
@@ -326,7 +326,7 @@ window.LXI = {
 
   STATS: [
     { icon: "flag", value: "1953", label: "Founded" },
-    { icon: "factory", value: "13", label: "Approved manufacturers" },
+    { icon: "factory", value: "14", label: "Approved manufacturers" },
     { icon: "ship", value: "No.6", label: "Global forwarder — LX Pantos" },
     { icon: "clock", value: "8–16", unit: "wks", label: "Distribution TR lead time" },
     { icon: "clock", value: "18–21", unit: "mo", label: "EHV power TR lead time (OLTC)" },
