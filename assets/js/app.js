@@ -514,6 +514,18 @@
     return '<div class="spec ' + cls + '"><dt>' + icon(ic) + esc(label) + '</dt><dd>' + html + '</dd></div>';
   }
 
+  // series / configuration list under a product's specs (e.g. MV GIS series, MV Station ratings)
+  function lineupBlock(L) {
+    if (!L || !L.items) return "";
+    var rows = L.items.map(function (it) {
+      return '<li><p class="lineup__head"><b class="lineup__name">' + esc(it.name) + '</b>' +
+        (it.tag ? '<span class="lineup__tag">' + esc(it.tag) + '</span>' : "") + '</p>' +
+        '<p class="lineup__spec">' + esc(it.spec) + '</p>' +
+        (it.note ? '<p class="lineup__note">' + esc(it.note) + '</p>' : "") + '</li>';
+    }).join("");
+    return '<div class="lineup"><p class="lineup__title">' + esc(L.title) + '</p><ul>' + rows + '</ul></div>';
+  }
+
   function productCard(sol, item, enItem, n) {
     var p = D.PRODUCTS[item.id], sp = p.specs, enP = EN.PRODUCTS[item.id];
     var title = item.title || p.name;
@@ -563,6 +575,7 @@
             specRow("spec--wide", "std", T.standards, val(sp.standards)) +
             specRow("spec--wide spec--lead", "clock", T.leadTime, val(sp.leadTime, sp.leadTimeNote)) +
           '</dl>' +
+          lineupBlock(p.lineup) +
           '<div class="madein"><span class="madein__label">' + icon("pin") + esc(T.madeIn) + '</span>' + p.madeIn.map(flag).join("") + '</div>' +
           '<button class="product__rfq" type="button" data-mail="' + esc(mailName) + '" aria-haspopup="dialog">' + icon("mail") +
             esc(T.requestQuote) + icon("arrow", "product__rfq-go") + '</button>' +
@@ -570,7 +583,27 @@
       '</article>';
   }
 
+  // Data Center: the whole product line by voltage level, with spec ranges (items with a card link to it)
+  function productLinePanel(sol) {
+    var PL = sol.productLine;
+    var groups = PL.groups.map(function (g, gi) {
+      var items = g.items.map(function (it) {
+        var inner = '<span class="pline__name">' + esc(it.name) + '</span>' +
+          (it.spec ? '<span class="pline__spec">' + esc(it.spec) + '</span>' : "") +
+          (it.note ? '<span class="pline__note">' + esc(it.note) + '</span>' : "");
+        return '<li>' + (it.ref
+          ? '<a class="pline__item is-link" href="#/' + sol.id + '/' + it.ref + '" data-scroll="' + sol.id + '-' + it.ref + '">' + inner + icon("arrow", "pline__go") + '</a>'
+          : '<span class="pline__item">' + inner + '</span>') + '</li>';
+      }).join("");
+      var lv = EN.SOLUTIONS.filter(function (s) { return s.id === sol.id; })[0].productLine.groups[gi].level.toLowerCase();
+      return '<li class="pline__group pline__group--' + esc(lv) + '"><span class="pline__level">' + esc(g.level) + '</span><ul class="pline__items">' + items + '</ul></li>';
+    }).join("");
+    return '<div class="panel pline"><p class="panel__title">' + esc(PL.title) + '</p><ol class="pline__list">' + groups + '</ol>' +
+      (PL.note ? '<p class="pline__foot">' + esc(PL.note) + '</p>' : "") + '</div>';
+  }
+
   function topPanel(sol) {
+    if (sol.productLine) return productLinePanel(sol);
     if (!sol.chain) {
       var items = sol.sections[0].items.map(function (it) {
         var p = D.PRODUCTS[it.id];

@@ -76,8 +76,8 @@ window.LXI = {
     // 언어별 브로셔 (null 이면 버튼 숨김) — 일본어 브로셔 제작 전까지 일본어 화면도 영문 PDF 연결
     // PDF 를 교체하면 ?v= 숫자도 올려 주세요 (브라우저 캐시 우회)
     brochure: {
-      en: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf?v=8", note: "PDF · 16 pages" },
-      ja: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf?v=8", note: "PDF · 英語版 · 16ページ" }
+      en: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf?v=9", note: "PDF · 16 pages" },
+      ja: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf?v=9", note: "PDF · 英語版 · 16ページ" }
     }
   },
 
@@ -170,36 +170,57 @@ window.LXI = {
       madeIn: ["kr"]
     },
 
-    "mv-gis": {
+    "mv-gis": {                              // 사양: 승인 제조사 MV GIS 카탈로그(IEEE/ANSI판) 기준 — 제조사·모델명은 비공개
       name: "MV GIS",
-      family: "Gas Insulated Switchgear",
-      headline: "24 – 38kV / up to 40kA",
-      image: { base: "assets/img/products/mv-gis-render", w: 1600, h: 1195, type: "render" },
+      family: "Gas / Dry-air Insulated Switchgear",
+      headline: "15 – 38kV / up to 63kA",
+      image: { base: "assets/img/products/mv-gis", w: 1478, h: 1184, type: "photo" },
+      components: ["Internal-arc tested · IEEE Type 2B", "50–60% smaller than AIS", "Front-removable VCB", "Expandable on both sides"],
+      lineup: {
+        title: "Series",
+        items: [
+          { name: "Standard GIS", tag: "SF6", spec: "38kV · up to 3,150A · 40kA/3s", note: "Single, double or transfer (bypass) busbar" },
+          { name: "Compact GIS", tag: "SF6 · sealed stainless tank", spec: "38kV · up to 3,150A · 40kA/3s", note: "Plug-in busbars — no gas handling on site" },
+          { name: "Dry-air GIS", tag: "Dry air · GWP 0", spec: "15kV 63kA · 27kV 25kA · 38kV 40kA", note: "SF6-free, with the ratings and safety of SF6 types" }
+        ]
+      },
       specs: {
         phase: "Three-phase",
         frequency: "50 / 60Hz",
-        voltage: "24 – 38kV",
-        rating: "up to 4,000A",                // GIS 는 MVA 대신 정격전류/차단전류로 표기
-        ratingNote: "40kA short-circuit breaking",
-        insulation: "SF6 / Dry air",
-        insulationNote: "Dry-air type: GWP 0",
-        standards: "IEC / IEEE (ANSI)",
+        voltage: "15 / 27 / 38kV",
+        voltageNote: "IEEE class · IEC 24 / 36kV types",
+        rating: "up to 3,150A",                // GIS 는 MVA 대신 정격전류/단시간전류로 표기
+        ratingNote: "Short-circuit up to 63kA / 3s",
+        insulation: "SF6 or dry air",
+        insulationNote: "Vacuum circuit breakers · dry air GWP 0",
+        standards: "IEEE C37.20.9 · C37.20.7 · IEC 62271-200",
         leadTime: "TBD"
       },
       madeIn: ["kr"]
     },
 
-    "mv-station": {
+    "mv-station": {                          // 사양: 승인 제조사 2.8 / 5.6MVA MV Station GA·SLD 기준
       name: "MV Station",
-      family: "Integrated Skid / Container",
-      headline: "Integrated MV skid for BESS",
-      components: ["MV switchgear", "Step-up transformer", "Aux. panels", "Containerized skid"],
+      family: "Integrated BESS MV Station",
+      headline: "2.8 / 5.6MVA · 22kV · 20ft container",
+      components: ["24kV RMU · VCB + OCR", "Oil-immersed MV transformer", "Aux. dry-type TR 61kVA", "Aux. & PCS power panels", "20ft ISO container"],
+      lineup: {
+        title: "Configurations",
+        items: [
+          { name: "2.8MVA", tag: "50Hz", spec: "22kV / 690V · two-winding", note: "One PCS block · RMU loop in / out (2 LBS)" },
+          { name: "5.6MVA", tag: "60Hz", spec: "22kV / dual LV · three-winding (Yd1d1)", note: "Two PCS blocks on one station" }
+        ]
+      },
       image: { base: "assets/img/products/mv-station-render", w: 1600, h: 1073, type: "render" },
       specs: {
         phase: "Three-phase",
-        frequency: "TBD",
-        voltage: "TBD",
-        capacity: "TBD",
+        frequency: "50 / 60Hz",
+        voltage: "22kV (24kV class)",
+        voltageNote: "LV side matched to the PCS (e.g. 690V)",
+        capacity: "2.8 / 5.6MVA",
+        capacityNote: "Two- / three-winding MV transformer",
+        insulation: "Oil-immersed MV transformer",
+        insulationNote: "Aux. TR: dry-type 690 / 400 / 110V",
         standards: "TBD",
         leadTime: "TBD"
       },
@@ -232,10 +253,37 @@ window.LXI = {
       index: "02",
       title: "Data Center Solution",
       tagline: "From grid to IT load",
-      cardItems: "Power TR · UL Pad-mount · MV GIS",
+      cardItems: "GIS · Power TR · MV / LV SWGR · Busway",
       cardImage: "assets/img/products/pad-mounted-640.webp",
-      intro: "Reliable power from the utility interconnection to the data hall — for hyperscale, colocation and campus substations.",
-      stats: ["HV to LV", "UL-certified distribution TR", "MV GIS up to 38kV"],
+      intro: "Total electrical infrastructure for data centers — GIS, transformers, MV / LV switchgear and busway from Korea’s top-tier manufacturers, from the utility interconnection to the rack.",
+      stats: ["154kV to LV — one package", "UL-certified distribution TR", "MV GIS up to 38kV"],
+      // 공급 품목·사양 범위 (DC Product line 기준) — 상세 카드가 있는 품목은 ref 로 연결
+      productLine: {
+        title: "Product line · specification ranges",
+        groups: [
+          { level: "HV", items: [
+            { name: "Gas Insulated Switchgear", spec: "up to 1,100kV · 8,000A · 50kA", note: "e.g. 170kV · 4,000A · 50kA" },
+            { name: "Power Transformer", spec: "up to 765kV · 1,500MVA", note: "Oil-immersed · synthetic ester option", ref: "power-transformer" }
+          ] },
+          { level: "MV", items: [
+            { name: "MV GIS", spec: "up to 36kV · 4,000A · 40kA", note: "IEC · IEEE 38kV types", ref: "mv-gis" },
+            { name: "MV Switchgear", spec: "up to 24kV · 4,000A · 40kA", note: "17.5 / 12 (6.6)kV · 4,000A · 50kA" },
+            { name: "Pad-mounted Transformer", spec: "up to 34.5kV · 10MVA", note: "UL certified", ref: "pad-mounted" },
+            { name: "Mold Transformer", spec: "up to 36kV · 30MVA", note: "Cast-resin, indoor" }
+          ] },
+          { level: "LV", items: [
+            { name: "LV Switchgear", spec: "up to 6,300A · 100kA" },
+            { name: "Busway", spec: "up to 6,300A · 100kA" },
+            { name: "UPS · PDU / PMM · RPP", note: "Power to the IT racks" },
+            { name: "Distribution Board", note: "Building & auxiliary loads" }
+          ] },
+          { level: "Backup", items: [
+            { name: "Diesel Generator", note: "Standby power via CTTS" },
+            { name: "Load Bank", note: "Commissioning & testing" }
+          ] }
+        ],
+        note: "RPP (remote power panel) and load bank are also available as a package."
+      },
       chain: [
         { label: "Utility Grid", sub: "HV", end: true },
         { label: "Power TR", sub: "HV / MV", ref: "power-transformer" },
@@ -247,6 +295,7 @@ window.LXI = {
         title: "Data center challenges — and how we help",
         items: [
           { icon: "clock", title: "Speed to power", text: "Distribution transformers in 8–16 weeks and EHV power transformers in 18–21 months help you energize on schedule." },
+          { icon: "server", title: "One package, grid to rack", text: "GIS, transformers, MV / LV switchgear, busway, UPS and RPP from one sourcing partner — one contract, one schedule." },
           { icon: "shield", title: "Supply-chain risk", text: "Approved factories, pre-inspection and a 100% P-Bond on every supply." },
           { icon: "truck", title: "Delivery to site", text: "Ocean, inland transport, installation and O&M coordinated by one partner." }
         ]
@@ -266,8 +315,8 @@ window.LXI = {
       tagline: "Grid-ready BESS interconnection",
       cardItems: "MV Station · Power TR · Pad-mount",
       cardImage: "assets/img/products/mv-station-render-900.webp",
-      intro: "Integrated MV stations and transformers that connect battery energy storage to the grid.",
-      stats: ["Integrated MV station", "Power & distribution TR", "BESS supply in Japan"],
+      intro: "Containerized MV stations (2.8 / 5.6MVA) and transformers that connect battery energy storage to the grid.",
+      stats: ["2.8 / 5.6MVA MV stations", "Power & distribution TR", "BESS supply in Japan"],
       chain: [
         { label: "Battery & PCS", sub: "LV AC", end: true },
         { label: "MV Station", sub: "LV / MV step-up", ref: "mv-station" },

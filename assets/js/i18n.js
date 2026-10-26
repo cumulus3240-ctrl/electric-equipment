@@ -217,14 +217,33 @@ window.LXI_I18N = {
                    insulation: "キャストレジン（モールド） / VPI", leadTime: "8～16週" }
         },
         "mv-gis": {
-          name: "中圧GIS", family: "ガス絶縁開閉装置", headline: "24～38kV / 最大 40kA",
-          specs: { phase: "三相", voltage: "24～38kV", rating: "最大 4,000A", ratingNote: "短絡遮断電流 40kA",
-                   insulation: "SF6 / ドライエア", insulationNote: "ドライエア方式：GWP 0" }
+          name: "中圧GIS", family: "ガス / ドライエア絶縁開閉装置", headline: "15～38kV / 最大 63kA",
+          components: ["内部アーク試験済み · IEEE Type 2B", "気中絶縁形より設置面積50～60%削減", "前面引出し式VCB", "左右どちらにも増設可能"],
+          lineup: {
+            title: "シリーズ",
+            items: [
+              { name: "標準形GIS", tag: "SF6", spec: "38kV · 最大3,150A · 40kA/3秒", note: "単母線・二重母線・トランスファー（バイパス）母線" },
+              { name: "コンパクトGIS", tag: "SF6 · ステンレス密封タンク", spec: "38kV · 最大3,150A · 40kA/3秒", note: "プラグイン母線のため現地でのガス作業が不要" },
+              { name: "ドライエアGIS", tag: "ドライエア · GWP 0", spec: "15kV 63kA · 27kV 25kA · 38kV 40kA", note: "SF6フリーで、SF6形と同等の定格と安全性" }
+            ]
+          },
+          specs: { phase: "三相", voltage: "15 / 27 / 38kV", voltageNote: "IEEE規格 · IEC 24 / 36kV形にも対応",
+                   rating: "最大 3,150A", ratingNote: "短絡電流 最大63kA / 3秒",
+                   insulation: "SF6 または ドライエア", insulationNote: "真空遮断器 · ドライエアはGWP 0" }
         },
         "mv-station": {
-          name: "MVステーション", family: "一体型スキッド / コンテナ", headline: "BESS向け一体型MVスキッド",
-          components: ["MVスイッチギヤ", "昇圧変圧器", "補助盤", "コンテナ型スキッド"],
-          specs: { phase: "三相" }
+          name: "MVステーション", family: "BESS向け一体型MVステーション", headline: "2.8 / 5.6MVA · 22kV · 20ftコンテナ",
+          components: ["24kV RMU · VCB＋過電流継電器", "油入MV変圧器", "補助用乾式変圧器 61kVA", "補助電源盤・PCS電源盤", "20ft ISOコンテナ"],
+          lineup: {
+            title: "構成",
+            items: [
+              { name: "2.8MVA", tag: "50Hz", spec: "22kV / 690V · 2巻線", note: "PCS 1台分 · RMUでループ受電・送電（LBS 2回路）" },
+              { name: "5.6MVA", tag: "60Hz", spec: "22kV / 低圧2回路 · 3巻線（Yd1d1）", note: "1ステーションでPCS 2台に対応" }
+            ]
+          },
+          specs: { phase: "三相", voltage: "22kV（24kV級）", voltageNote: "低圧側はPCSに合わせて選定（例：690V）",
+                   capacity: "2.8 / 5.6MVA", capacityNote: "2巻線 / 3巻線 MV変圧器",
+                   insulation: "油入（MV変圧器）", insulationNote: "補助変圧器：乾式 690 / 400 / 110V" }
         }
       },
       SOLUTIONS: [
@@ -236,9 +255,35 @@ window.LXI_I18N = {
         },
         {
           title: "データセンター ソリューション", tagline: "系統からITロードまで",
-          cardItems: "電力用TR · UL配電用TR · 中圧GIS",
-          intro: "系統連系点からデータホールまで — ハイパースケール、コロケーション、キャンパス変電所に信頼性の高い電力を届けます。",
-          stats: ["高圧から低圧まで", "UL認証の配電用変圧器", "38kVまでの中圧GIS"],
+          cardItems: "GIS · 電力用TR · 中圧 / 低圧スイッチギヤ · バスウェイ",
+          intro: "データセンターの電気設備をトータルで — 韓国トップクラスのメーカーによるGIS・変圧器・中圧 / 低圧スイッチギヤ・バスウェイを、系統連系点からラックまでご提供します。",
+          stats: ["154kVから低圧まで一括", "UL認証の配電用変圧器", "38kVまでの中圧GIS"],
+          productLine: {
+            title: "製品ラインナップ · 仕様範囲",
+            groups: [
+              { level: "高圧", items: [
+                { name: "ガス絶縁開閉装置（GIS）", spec: "最大 1,100kV · 8,000A · 50kA", note: "例：170kV · 4,000A · 50kA" },
+                { name: "電力用変圧器", spec: "最大 765kV · 1,500MVA", note: "油入 · 合成エステル油にも対応" }
+              ] },
+              { level: "中圧", items: [
+                { name: "中圧GIS", spec: "最大 36kV · 4,000A · 40kA", note: "IEC · IEEE 38kV形にも対応" },
+                { name: "中圧スイッチギヤ", spec: "最大 24kV · 4,000A · 40kA", note: "17.5 / 12（6.6）kV · 4,000A · 50kA" },
+                { name: "パッドマウント変圧器", spec: "最大 34.5kV · 10MVA", note: "UL認証取得" },
+                { name: "モールド変圧器", spec: "最大 36kV · 30MVA", note: "キャストレジン · 屋内用" }
+              ] },
+              { level: "低圧", items: [
+                { name: "低圧スイッチギヤ", spec: "最大 6,300A · 100kA" },
+                { name: "バスウェイ", spec: "最大 6,300A · 100kA" },
+                { name: "UPS · PDU / PMM · RPP", note: "ITラックへの給電" },
+                { name: "分電盤", note: "建物・補機負荷" }
+              ] },
+              { level: "非常用", items: [
+                { name: "ディーゼル発電機", note: "CTTSによる非常用電源" },
+                { name: "ロードバンク", note: "試運転・試験用" }
+              ] }
+            ],
+            note: "RPP（リモートパワーパネル）とロードバンクもパッケージで供給できます。"
+          },
           chain: [
             { label: "電力系統", sub: "高圧" },
             { label: "電力用TR", sub: "高圧 / 中圧" },
@@ -250,6 +295,7 @@ window.LXI_I18N = {
             title: "データセンターの課題と当社の解決策",
             items: [
               { title: "早期の受電", text: "配電用変圧器は8～16週、超高圧変圧器は18～21か月で供給し、計画どおりの受電を支援します。" },
+              { title: "系統からラックまで一括", text: "GIS・変圧器・中圧 / 低圧スイッチギヤ・バスウェイ・UPS・RPPを一つの調達窓口で — 契約もスケジュールも一本化。" },
               { title: "サプライチェーンリスク", text: "承認工場、事前の工場監査、全供給品への100% P-Bond。" },
               { title: "現場までの納入", text: "海上・内陸輸送から据付・O&Mまで、一つの窓口で対応します。" }
             ]
@@ -259,8 +305,8 @@ window.LXI_I18N = {
         {
           title: "ESS ソリューション", tagline: "系統連系に対応したBESS",
           cardItems: "MVステーション · 電力用TR · 配電用TR",
-          intro: "一体型MVステーションと変圧器で、蓄電池システム（BESS）を電力系統に接続します。",
-          stats: ["一体型MVステーション", "電力用・配電用変圧器", "日本でのBESS向け納入"],
+          intro: "コンテナ型MVステーション（2.8 / 5.6MVA）と変圧器で、蓄電池システム（BESS）を電力系統に接続します。",
+          stats: ["2.8 / 5.6MVAのMVステーション", "電力用・配電用変圧器", "日本でのBESS向け納入"],
           chain: [
             { label: "蓄電池・PCS", sub: "低圧 AC" },
             { label: "MVステーション", sub: "低圧 / 中圧 昇圧" },
