@@ -79,9 +79,19 @@
       body: ascii(M.body.replace("{product}", product ? "the " + product : M.generalBodyProduct))
     };
   }
-  function mailHref(product) {
-    var M = EN.CONTACT.mail, p = mailParts(product), cc = addrList(M.cc);
-    return "mailto:" + addrList(M.to) + "?" + (cc ? "cc=" + cc + "&" : "") +
+  function solById(list, id) {
+    return id ? list.filter(function (s) { return s.id === id; })[0] || null : null;
+  }
+  // To = the solution's contact (home page: the general To list); CC = every other team address, in the original order
+  function recipients(solId) {
+    var M = EN.CONTACT.mail, all = M.to.concat(M.cc), sol = solById(EN.SOLUTIONS, solId);
+    var to = sol && sol.contact ? [sol.contact.email] : M.to.slice();
+    var cc = all.filter(function (a, i) { return all.indexOf(a) === i && to.indexOf(a) < 0; });
+    return { to: to, cc: cc };
+  }
+  function mailHref(product, solId) {
+    var r = recipients(solId), p = mailParts(product), cc = addrList(r.cc);
+    return "mailto:" + addrList(r.to) + "?" + (cc ? "cc=" + cc + "&" : "") +
       "subject=" + encodeURIComponent(p.subject) + "&body=" + encodeURIComponent(p.body.replace(/\r?\n/g, "\r\n"));
   }
 
@@ -115,7 +125,8 @@
     truck: '<path d="M2.5 6h11v10h-11zM13.5 10h4l3 3v3h-7"/><circle cx="6.5" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
     rocket: '<path d="M12 15l-3-3c1.5-5 4.5-8 10-9-1 5.5-4 8.5-9 10z"/><path d="M9 12l-4 1-2 3 4-.5M12 15l-1 4-3 2 .5-4"/>',
     flag: '<path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>',
-    award: '<circle cx="12" cy="9" r="5.5"/><path d="M8.5 13.5L7 21l5-2.5 5 2.5-1.5-7.5"/>'
+    award: '<circle cx="12" cy="9" r="5.5"/><path d="M8.5 13.5L7 21l5-2.5 5 2.5-1.5-7.5"/>',
+    container: '<rect x="2.5" y="6.5" width="19" height="11" rx="1"/><path d="M7 9v6M10.5 9v6M14 9v6M17.5 9v6"/>'
   };
   function icon(name, cls) {
     return '<svg class="ico ' + (cls || "") + '" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' + I[name] + '</svg>';
@@ -239,16 +250,29 @@
       '</footer>';
   }
 
-  function contactBlock() {
-    var C = D.CONTACT, W = C.whatsapp, B = brochure();
-    var nums = C.phones.map(function (p) {
+  // phone lines for the call sheet / contact card: a solution page leads with its contact, then the U.S. office
+  function phoneLines(sol) {
+    var C = D.CONTACT;
+    if (!sol || !sol.contact) return C.phones;
+    var k = sol.contact;
+    return [{ label: k.name, sub: sol.title, number: k.phone, flag: D.COUNTRIES.kr.flag }]
+      .concat(C.phones.filter(function (p) { return p.flag !== D.COUNTRIES.kr.flag && p.number !== k.phone; }));
+  }
+
+  function contactBlock(sol) {
+    var C = D.CONTACT, W = C.whatsapp, B = brochure(), solId = sol && sol.contact ? sol.id : "";
+    var nums = phoneLines(sol).map(function (p) {
       return '<span class="cnum"><img src="' + p.flag + '" alt="" width="18" height="12">' + esc(p.number) + '</span>';
     }).join("");
+    var person = solId
+      ? '<p class="contact__person">' + icon("users") + '<span>' + esc(fmt(T.contactPerson, { solution: sol.title })) +
+        ' <b>' + esc(sol.contact.name) + '</b></span></p>'
+      : "";
     var btns = [
-      '<button class="btn btn--primary" type="button" data-mail aria-haspopup="dialog">' + icon("mail") +
+      '<button class="btn btn--primary" type="button" data-mail data-sol="' + solId + '" aria-haspopup="dialog">' + icon("mail") +
         '<span class="btn__text">' + esc(T.emailUs) + '<small class="cmails">' +
-        C.mail.to.map(function (a) { return '<span>' + esc(a) + '</span>'; }).join("") + '</small></span></button>',
-      '<button class="btn" type="button" data-call aria-haspopup="dialog">' + icon("phone") +
+        recipients(solId).to.map(function (a) { return '<span>' + esc(a) + '</span>'; }).join("") + '</small></span></button>',
+      '<button class="btn" type="button" data-call data-sol="' + solId + '" aria-haspopup="dialog">' + icon("phone") +
         '<span class="btn__text">' + esc(T.callUs) + '<small class="cnums">' + nums + '</small></span></button>'
     ];
     if (W) {
@@ -267,7 +291,7 @@
           '<div class="contact__card">' +
             '<p class="eyebrow eyebrow--red">' + esc(T.contact) + '</p>' +
             '<h2 id="contact-title" class="contact__title">' + esc(T.contactTitle) + '</h2>' +
-            '<p class="contact__text">' + esc(T.contactText) + '</p>' +
+            '<p class="contact__text">' + esc(T.contactText) + '</p>' + person +
             '<div class="contact__actions">' + btns.join("") + '</div>' +
           '</div>' +
         '</div>' +
@@ -577,15 +601,28 @@
           '<p class="product__headline">' + esc(p.headline) + '</p>' +
           extra +
           '<dl class="specs">' + grid +
-            specRow("spec--wide", "std", T.standards, val(sp.standards)) +
+            (sp.standards !== undefined ? specRow("spec--wide", "std", T.standards, val(sp.standards)) : "") +
+            (sp.enclosure !== undefined ? specRow("spec--wide", "container", T.enclosure, val(sp.enclosure)) : "") +
             specRow("spec--wide spec--lead", "clock", T.leadTime, val(sp.leadTime, sp.leadTimeNote)) +
           '</dl>' +
           lineupBlock(p.lineup) +
           '<div class="madein"><span class="madein__label">' + icon("pin") + esc(T.madeIn) + '</span>' + p.madeIn.map(flag).join("") + '</div>' +
-          '<button class="product__rfq" type="button" data-mail="' + esc(mailName) + '" aria-haspopup="dialog">' + icon("mail") +
+          '<button class="product__rfq" type="button" data-mail="' + esc(mailName) + '" data-sol="' + sol.id + '" aria-haspopup="dialog">' + icon("mail") +
             esc(T.requestQuote) + icon("arrow", "product__rfq-go") + '</button>' +
+          rfqContact(sol) +
         '</div>' +
       '</article>';
+  }
+
+  // the solution's contact person under each "Request a quote" button
+  function rfqContact(sol) {
+    var k = sol.contact;
+    if (!k) return "";
+    return '<div class="product__contact">' + icon("users") + '<div class="pc__body">' +
+        '<p class="pc__name">' + esc(k.name) + '<small>' + esc(fmt(T.solutionContact, { solution: sol.title })) + '</small></p>' +
+        '<p class="pc__links"><a href="' + telHref(k.phone) + '" data-ev="call">' + esc(k.phone) + '</a>' +
+          '<button type="button" data-mail data-sol="' + sol.id + '" aria-haspopup="dialog">' + esc(k.email) + '</button></p>' +
+      '</div></div>';
   }
 
   // Data Center: the whole product line by voltage level, with spec ranges (items with a card link to it)
@@ -689,7 +726,7 @@
       '<div class="wrap sol-body">' + topPanel(sol) + proofStrip(sol) + sections + whyStrip(sol) +
         '<section class="certpanel" aria-label="' + esc(T.certEyebrow) + '"><p class="panel__title">' + esc(T.certEyebrow) + '</p>' + certBlock(true) + '</section>' +
       '</div>' +
-      contactBlock() +
+      contactBlock(sol) +
       '<section class="others" aria-label="' + esc(T.othersAria) + '"><div class="wrap"><p class="eyebrow eyebrow--red">' + esc(T.exploreMore) + '</p><div class="others__list">' + others + '</div></div></section>' +
       footer();
 
@@ -750,28 +787,21 @@
     t.innerHTML = html.trim();
     return t.content.firstChild;
   }
-  var lb, lbImg, callSheet, mailSheet, toast, mailState = { product: "" };
+  var lb, lbImg, callSheet, mailSheet, toast, mailState = { product: "", sol: "", to: [], cc: [] };
 
   function buildOverlays() {
     ["lightbox", "callSheet", "mailSheet", "toast"].forEach(function (id) {
       var o = document.getElementById(id);
       if (o) o.parentNode.removeChild(o);
     });
-    var M = EN.CONTACT.mail;
+    var R = recipients("");
     lb = el('<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="' + esc(T.imageViewer) + '" hidden>' +
       '<button class="lightbox__close" type="button" aria-label="' + esc(T.closeImage) + '">&times;</button><img alt=""></div>');
     callSheet = el('<div class="sheet" id="callSheet" role="dialog" aria-modal="true" aria-labelledby="callSheetTitle" hidden>' +
       '<div class="sheet__panel">' +
         '<p class="sheet__title" id="callSheetTitle">' + esc(T.callTitle) + '</p>' +
         '<p class="sheet__sub">' + esc(T.callSub) + '</p>' +
-        '<ul class="sheet__list">' + D.CONTACT.phones.map(function (p) {
-          return '<li class="sheet__row">' +
-            '<a class="sheet__call" href="' + telHref(p.number) + '" data-ev="call" data-ev-line="' + esc(p.label) + '"><img src="' + p.flag + '" alt="" width="30" height="20">' +
-              '<span class="sheet__num"><strong>' + esc(p.label) + '</strong>' + esc(p.number) + '</span>' +
-              '<span class="sheet__dial">' + icon("phone") + '</span></a>' +
-            '<button class="sheet__copy" type="button" data-copy="' + esc(p.number) + '" data-toast="' + esc(T.numberCopied) + '" aria-label="' + esc(fmt(T.copyNumber, { label: p.label })) + '">' + icon("copy") + '</button>' +
-          '</li>';
-        }).join("") + '</ul>' +
+        '<ul class="sheet__list" data-call-list>' + callRows(null) + '</ul>' +
         '<button class="sheet__cancel" type="button" data-close>' + esc(T.cancel) + '</button>' +
       '</div></div>');
     mailSheet = el('<div class="sheet" id="mailSheet" role="dialog" aria-modal="true" aria-labelledby="mailSheetTitle" hidden>' +
@@ -780,8 +810,8 @@
         '<p class="sheet__sub" data-mail-subject></p>' +
         '<a class="sheet__primary" href="#" data-mail-open>' + icon("mail") + '<span>' + esc(T.mailOpen) + '</span>' + icon("arrow", "sheet__primary-go") + '</a>' +
         '<ul class="sheet__list sheet__list--copy">' +
-          copyRow("to", T.mailTo, M.to.join(", ")) +
-          copyRow("cc", T.mailCc, M.cc.join(", ")) +
+          copyRow("to", T.mailTo, R.to.join(", ")) +
+          copyRow("cc", T.mailCc, R.cc.join(", ")) +
           copyRow("msg", T.mailMsg, T.mailMsgDesc) +
         '</ul>' +
         '<button class="sheet__cancel" type="button" data-close>' + esc(T.cancel) + '</button>' +
@@ -811,23 +841,40 @@
       });
     });
   }
+  function callRows(sol) {
+    return phoneLines(sol).map(function (p) {
+      return '<li class="sheet__row">' +
+        '<a class="sheet__call" href="' + telHref(p.number) + '" data-ev="call" data-ev-line="' + esc(p.label) + '"><img src="' + p.flag + '" alt="" width="30" height="20">' +
+          '<span class="sheet__num"><strong>' + esc(p.label) + (p.sub ? ' <small>' + esc(p.sub) + '</small>' : "") + '</strong>' + esc(p.number) + '</span>' +
+          '<span class="sheet__dial">' + icon("phone") + '</span></a>' +
+        '<button class="sheet__copy" type="button" data-copy="' + esc(p.number) + '" data-toast="' + esc(T.numberCopied) + '" aria-label="' + esc(fmt(T.copyNumber, { label: p.label })) + '">' + icon("copy") + '</button>' +
+      '</li>';
+    }).join("");
+  }
+  function openCall(solId) {
+    callSheet.querySelector("[data-call-list]").innerHTML = callRows(solById(D.SOLUTIONS, solId));
+    openLayer(callSheet);
+  }
   function copyRow(key, label, value) {
-    return '<li class="sheet__row sheet__row--copy"><div class="sheet__addr"><strong>' + esc(label) + '</strong><span>' + esc(value) + '</span></div>' +
+    return '<li class="sheet__row sheet__row--copy"><div class="sheet__addr"><strong>' + esc(label) + '</strong><span data-addr="' + key + '">' + esc(value) + '</span></div>' +
       '<button class="sheet__copy" type="button" data-copy-mail="' + key + '" aria-label="' + esc(fmt(T.copyWhat, { what: label })) + '">' + icon("copy") + '<span>' + esc(T.copy) + '</span></button></li>';
   }
   function copyMail(key) {
-    var M = EN.CONTACT.mail, p = mailParts(mailState.product);
-    if (key === "to") copyText(M.to.join(", "), T.addrCopied);
-    else if (key === "cc") copyText(M.cc.join(", "), T.ccCopied);
+    var p = mailParts(mailState.product);
+    if (key === "to") copyText(mailState.to.join(", "), T.addrCopied);
+    else if (key === "cc") copyText(mailState.cc.join(", "), T.ccCopied);
     else copyText("Subject: " + p.subject + "\n\n" + p.body, T.msgCopied);
     trackEvent("email_copy", { part: key });
   }
-  function openMail(product) {
-    mailState.product = product || "";
-    mailSheet.querySelector("[data-mail-open]").setAttribute("href", mailHref(product));
+  function openMail(product, solId) {
+    var r = recipients(solId);
+    mailState = { product: product || "", sol: solId || "", to: r.to, cc: r.cc };
+    mailSheet.querySelector("[data-mail-open]").setAttribute("href", mailHref(product, solId));
     mailSheet.querySelector("[data-mail-subject]").textContent = mailParts(product).subject;
+    mailSheet.querySelector('[data-addr="to"]').textContent = r.to.join(", ");
+    mailSheet.querySelector('[data-addr="cc"]').textContent = r.cc.join(", ");
     openLayer(mailSheet);
-    trackEvent(product ? "quote" : "email", product ? { product: product } : {});
+    trackEvent(product ? "quote" : "email", product ? { product: product, solution: solId || "home" } : { solution: solId || "home" });
   }
 
   var lastFocus = null;
@@ -896,8 +943,9 @@
     var zoom = e.target.closest(".product__zoom");
     if (zoom) { openLightbox(zoom.querySelector("img")); return; }
     var mail = e.target.closest("[data-mail]");
-    if (mail) { openMail(mail.getAttribute("data-mail")); return; }
-    if (e.target.closest("[data-call]")) { openLayer(callSheet); return; }
+    if (mail) { openMail(mail.getAttribute("data-mail"), mail.getAttribute("data-sol") || ""); return; }
+    var call = e.target.closest("[data-call]");
+    if (call) { openCall(call.getAttribute("data-sol") || ""); return; }
     var ev = e.target.closest("[data-ev]");
     if (ev) trackEvent(ev.getAttribute("data-ev"), {});
     if (e.target.closest("[data-top]")) { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); return; }

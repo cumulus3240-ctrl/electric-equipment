@@ -76,8 +76,8 @@ window.LXI = {
     // 언어별 브로셔 (null 이면 버튼 숨김) — 일본어 브로셔 제작 전까지 일본어 화면도 영문 PDF 연결
     // PDF 를 교체하면 ?v= 숫자도 올려 주세요 (브라우저 캐시 우회)
     brochure: {
-      en: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf?v=10", note: "PDF · 16 pages" },
-      ja: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf?v=10", note: "PDF · 英語版 · 16ページ" }
+      en: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf?v=12", note: "PDF · 16 pages" },
+      ja: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf?v=12", note: "PDF · 英語版 · 16ページ" }
     }
   },
 
@@ -107,8 +107,7 @@ window.LXI = {
         insulationNote: "Mineral oil / Natural ester",
         tap: "OLTC / DETC",
         standards: "ANSI (IEEE C57) / IEC 60076",
-        leadTime: "18 – 36 months",
-        leadTimeNote: "DDP basis"
+        leadTime: "12 – 20 months"
       },
       madeIn: ["kr", "tw", "id", "om"]
     },
@@ -154,14 +153,14 @@ window.LXI = {
     "dry-type": {
       name: "Dry-type Transformer",
       family: "Indoor / Dry Distribution",
-      headline: "up to 36kV / 20,000kVA",
+      headline: "up to 36kV / 30MVA",
       image: { base: "assets/img/products/dry-type", w: 976, h: 1226, type: "photo" },
       specs: {
         phase: "Three-phase",
         frequency: "50 / 60Hz",
         voltage: "up to 36kV class",
-        capacity: "up to 20MVA",
-        capacityNote: "20,000kVA",
+        capacity: "up to 30MVA",
+        capacityNote: "30,000kVA",
         insulation: "Cast resin / VPI",
         tap: "DETC",
         standards: "ANSI / IEEE / IEC",
@@ -221,8 +220,8 @@ window.LXI = {
         capacityNote: "Two- / three-winding MV transformer",
         insulation: "Oil-immersed MV transformer",
         insulationNote: "Aux. TR: dry-type 690 / 400 / 110V",
-        standards: "TBD",
-        leadTime: "TBD"
+        enclosure: "20ft ISO container",    // MV Station 은 Standards 대신 Enclosure 행 표시
+        leadTime: "10 months"
       },
       madeIn: ["kr"]
     }
@@ -232,6 +231,9 @@ window.LXI = {
   SOLUTIONS: [
     {
       id: "power",
+      // 솔루션별 담당자: 이 화면의 'Request a quote'·Email us 는 담당자를 수신(To), 나머지 팀 주소(CONTACT.mail 의 to+cc)는 모두 참조(CC)
+      //                  Call us 는 담당자 번호 + 미국 법인 번호
+      contact: { name: "Mina Park", phone: "+82-10-2591-6930", email: "maparka@lxintl.co.kr" },
       index: "01",
       title: "Power Solution",
       tagline: "Transformers up to 500kV",
@@ -250,6 +252,7 @@ window.LXI = {
     },
     {
       id: "data-center",
+      contact: { name: "Hansin Lee", phone: "+82-10-3115-3228", email: "hslee@lxintl.co.kr" },
       index: "02",
       title: "Data Center Solution",
       tagline: "From grid to IT load",
@@ -263,7 +266,7 @@ window.LXI = {
         groups: [
           { level: "HV", items: [
             { name: "Gas Insulated Switchgear", spec: "up to 1,100kV · 8,000A · 50kA", note: "e.g. 170kV · 4,000A · 50kA" },
-            { name: "Power Transformer", spec: "up to 765kV · 1,500MVA", note: "Oil-immersed · synthetic ester option", ref: "power-transformer" }
+            { name: "Power Transformer", spec: "up to 500kV · 1,000MVA", note: "Oil-immersed · synthetic ester option", ref: "power-transformer" }
           ] },
           { level: "MV", items: [
             { name: "MV GIS", spec: "up to 36kV · 4,000A · 40kA", note: "IEC · IEEE 38kV types", ref: "mv-gis" },
@@ -294,7 +297,7 @@ window.LXI = {
       why: {
         title: "Data center challenges — and how we help",
         items: [
-          { icon: "clock", title: "Speed to power", text: "Distribution transformers in 8–16 weeks and EHV power transformers in 18–21 months help you energize on schedule." },
+          { icon: "clock", title: "Speed to power", text: "Distribution transformers in 8–16 weeks and EHV power transformers in 12–20 months help you energize on schedule." },
           { icon: "server", title: "One package, grid to rack", text: "GIS, transformers, MV / LV switchgear, busway, UPS and RPP from one sourcing partner — one contract, one schedule." },
           { icon: "shield", title: "Supply-chain risk", text: "Approved factories, pre-inspection and a 100% P-Bond on every supply." },
           { icon: "truck", title: "Delivery to site", text: "Ocean, inland transport, installation and O&M coordinated by one partner." }
@@ -310,6 +313,7 @@ window.LXI = {
     },
     {
       id: "ess",
+      contact: { name: "Jayde Bak", phone: "+82-10-3380-3240", email: "jhbaka@lxintl.co.kr" },
       index: "03",
       title: "ESS Solution",
       tagline: "Grid-ready BESS interconnection",
@@ -378,7 +382,7 @@ window.LXI = {
     { icon: "factory", value: "14", label: "Approved manufacturers" },
     { icon: "ship", value: "No.6", label: "Global forwarder — LX Pantos" },
     { icon: "clock", value: "8–16", unit: "wks", label: "Distribution TR lead time" },
-    { icon: "clock", value: "18–21", unit: "mo", label: "EHV power TR lead time (OLTC)" },
+    { icon: "clock", value: "12–20", unit: "mo", label: "EHV power TR lead time (OLTC)" },
     { icon: "shield", value: "100%", label: "P-Bond secured" }
   ],
 

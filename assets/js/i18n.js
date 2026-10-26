@@ -63,15 +63,18 @@ window.LXI_I18N = {
       insulation: "Insulation",
       tap: "Tap changer",
       standards: "Standards",
+      enclosure: "Enclosure",
       leadTime: "Lead Time",
       madeIn: "Made in",
       ulCertified: "UL Listed",
       requestQuote: "Request a quote",
+      contactPerson: "Your contact for {solution}:",
+      solutionContact: "{solution} contact",
       enlarge: "Enlarge {title} image",
       whyDefault: {
         title: "Why source through LX International",
         items: [
-          { icon: "clock", title: "Short lead times", text: "Distribution transformers in 8–16 weeks; EHV power transformers in 18–21 months." },
+          { icon: "clock", title: "Short lead times", text: "Distribution transformers in 8–16 weeks; EHV power transformers in 12–20 months." },
           { icon: "shield", title: "Secured supply", text: "Pre-inspected, approved factories and a 100% P-Bond on every supply." },
           { icon: "truck", title: "Door-to-site delivery", text: "LX Pantos logistics plus local partners for installation and O&M." }
         ]
@@ -149,15 +152,18 @@ window.LXI_I18N = {
       insulation: "絶縁",
       tap: "タップ切換器",
       standards: "規格",
+      enclosure: "筐体",
       leadTime: "納期",
       madeIn: "生産国",
       ulCertified: "ULリスティング取得",
       requestQuote: "見積を依頼する",
+      contactPerson: "{solution}の担当者：",
+      solutionContact: "{solution} 担当",
       enlarge: "{title} の画像を拡大",
       whyDefault: {
         title: "LX Internationalから調達するメリット",
         items: [
-          { title: "短納期", text: "配電用変圧器は8～16週、超高圧変圧器は18～21か月で供給します。" },
+          { title: "短納期", text: "配電用変圧器は8～16週、超高圧変圧器は12～20か月で供給します。" },
           { title: "確実な供給", text: "事前監査済みの承認工場と、全供給品への100% P-Bond。" },
           { title: "現場までの一貫納入", text: "LX Pantosの物流と、据付・O&Mを担う現地パートナー。" }
         ]
@@ -199,7 +205,7 @@ window.LXI_I18N = {
         "power-transformer": {
           name: "電力用変圧器", family: "送変電", headline: "最大 500kV / 1,000MVA",
           specs: { phase: "単相 / 三相", capacity: "最大 1,000MVA", insulation: "油入",
-                   insulationNote: "鉱油 / 天然エステル", leadTime: "18～36か月", leadTimeNote: "DDP条件" }
+                   insulationNote: "鉱油 / 天然エステル", leadTime: "12～20か月" }
         },
         "pad-mounted": {
           name: "パッドマウント変圧器", family: "地中配電", headline: "最大 34.5kV / 10,000kVA",
@@ -212,8 +218,8 @@ window.LXI_I18N = {
                    insulation: "鉱油 / 天然エステル", leadTime: "8～12週" }
         },
         "dry-type": {
-          name: "乾式変圧器", family: "屋内・乾式配電", headline: "最大 36kV / 20,000kVA",
-          specs: { phase: "三相", voltage: "36kV級まで", capacity: "最大 20MVA",
+          name: "乾式変圧器", family: "屋内・乾式配電", headline: "最大 36kV / 30MVA",
+          specs: { phase: "三相", voltage: "36kV級まで", capacity: "最大 30MVA",
                    insulation: "キャストレジン（モールド） / VPI", leadTime: "8～16週" }
         },
         "mv-gis": {
@@ -247,7 +253,8 @@ window.LXI_I18N = {
           },
           specs: { phase: "三相", voltage: "22kV（24kV級）", voltageNote: "低圧側はPCSに合わせて選定（例：690V）",
                    capacity: "2.8 / 5.6MVA", capacityNote: "2巻線 / 3巻線 MV変圧器",
-                   insulation: "油入（MV変圧器）", insulationNote: "補助変圧器：乾式 690 / 400 / 110V" }
+                   insulation: "油入（MV変圧器）", insulationNote: "補助変圧器：乾式 690 / 400 / 110V",
+                   enclosure: "20ft ISOコンテナ", leadTime: "10か月" }
         }
       },
       SOLUTIONS: [
@@ -267,7 +274,7 @@ window.LXI_I18N = {
             groups: [
               { level: "高圧", items: [
                 { name: "ガス絶縁開閉装置（GIS）", spec: "最大 1,100kV · 8,000A · 50kA", note: "例：170kV · 4,000A · 50kA" },
-                { name: "電力用変圧器", spec: "最大 765kV · 1,500MVA", note: "油入 · 合成エステル油にも対応" }
+                { name: "電力用変圧器", spec: "最大 500kV · 1,000MVA", note: "油入 · 合成エステル油にも対応" }
               ] },
               { level: "中圧", items: [
                 { name: "中圧GIS", spec: "最大 36kV · 4,000A · 40kA", note: "IEC · IEEE 38kV形にも対応" },
@@ -298,7 +305,7 @@ window.LXI_I18N = {
           why: {
             title: "データセンターの課題と当社の解決策",
             items: [
-              { title: "早期の受電", text: "配電用変圧器は8～16週、超高圧変圧器は18～21か月で供給し、計画どおりの受電を支援します。" },
+              { title: "早期の受電", text: "配電用変圧器は8～16週、超高圧変圧器は12～20か月で供給し、計画どおりの受電を支援します。" },
               { title: "系統からラックまで一括", text: "GIS・変圧器・中圧 / 低圧スイッチギヤ・バスウェイ・UPS・RPPを一つの調達窓口で — 契約もスケジュールも一本化。" },
               { title: "サプライチェーンリスク", text: "承認工場、事前の工場監査、全供給品への100% P-Bond。" },
               { title: "現場までの納入", text: "海上・内陸輸送から据付・O&Mまで、一つの窓口で対応します。" }
