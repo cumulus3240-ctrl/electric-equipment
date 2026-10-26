@@ -65,7 +65,7 @@ window.LXI_I18N = {
       standards: "Standards",
       leadTime: "Lead Time",
       madeIn: "Made in",
-      ulCertified: "UL Certified",
+      ulCertified: "UL Listed",
       requestQuote: "Request a quote",
       enlarge: "Enlarge {title} image",
       whyDefault: {
@@ -151,7 +151,7 @@ window.LXI_I18N = {
       standards: "規格",
       leadTime: "納期",
       madeIn: "生産国",
-      ulCertified: "UL認証取得",
+      ulCertified: "ULリスティング取得",
       requestQuote: "見積を依頼する",
       enlarge: "{title} の画像を拡大",
       whyDefault: {
@@ -227,9 +227,13 @@ window.LXI_I18N = {
               { name: "ドライエアGIS", tag: "ドライエア · GWP 0", spec: "15kV 63kA · 27kV 25kA · 38kV 40kA", note: "SF6フリーで、SF6形と同等の定格と安全性" }
             ]
           },
-          specs: { phase: "三相", voltage: "15 / 27 / 38kV", voltageNote: "IEEE規格 · IEC 24 / 36kV形にも対応",
-                   rating: "最大 3,150A", ratingNote: "短絡電流 最大63kA / 3秒",
-                   insulation: "SF6 または ドライエア", insulationNote: "真空遮断器 · ドライエアはGWP 0" }
+          specRows: [
+            { label: "定格電圧", note: "IEEE規格 · IEC 24 / 36kV形にも対応" },
+            { label: "定格電流", value: "最大 3,150A", note: "主母線・フィーダ 1,250～3,150A" },
+            { label: "定格短時間耐電流", value: "最大 63kA / 3秒" },
+            { label: "母線構成", value: "単母線 / 二重母線", note: "トランスファー（バイパス）母線・リング母線にも対応" },
+            { label: "絶縁媒体", value: "SF6 / ドライエア", note: "ドライエア：GWP 0 · 真空遮断器" }
+          ]
         },
         "mv-station": {
           name: "MVステーション", family: "BESS向け一体型MVステーション", headline: "2.8 / 5.6MVA · 22kV · 20ftコンテナ",
@@ -257,7 +261,7 @@ window.LXI_I18N = {
           title: "データセンター ソリューション", tagline: "系統からITロードまで",
           cardItems: "GIS · 電力用TR · 中圧 / 低圧スイッチギヤ · バスウェイ",
           intro: "データセンターの電気設備をトータルで — 韓国トップクラスのメーカーによるGIS・変圧器・中圧 / 低圧スイッチギヤ・バスウェイを、系統連系点からラックまでご提供します。",
-          stats: ["154kVから低圧まで一括", "UL認証の配電用変圧器", "38kVまでの中圧GIS"],
+          stats: ["154kVから低圧まで一括", "ULリスティング取得の配電用変圧器", "38kVまでの中圧GIS"],
           productLine: {
             title: "製品ラインナップ · 仕様範囲",
             groups: [
@@ -268,7 +272,7 @@ window.LXI_I18N = {
               { level: "中圧", items: [
                 { name: "中圧GIS", spec: "最大 36kV · 4,000A · 40kA", note: "IEC · IEEE 38kV形にも対応" },
                 { name: "中圧スイッチギヤ", spec: "最大 24kV · 4,000A · 40kA", note: "17.5 / 12（6.6）kV · 4,000A · 50kA" },
-                { name: "パッドマウント変圧器", spec: "最大 34.5kV · 10MVA", note: "UL認証取得" },
+                { name: "パッドマウント変圧器", spec: "最大 34.5kV · 10MVA", note: "ULリスティング取得" },
                 { name: "モールド変圧器", spec: "最大 36kV · 30MVA", note: "キャストレジン · 屋内用" }
               ] },
               { level: "低圧", items: [

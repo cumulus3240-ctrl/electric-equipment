@@ -76,8 +76,8 @@ window.LXI = {
     // 언어별 브로셔 (null 이면 버튼 숨김) — 일본어 브로셔 제작 전까지 일본어 화면도 영문 PDF 연결
     // PDF 를 교체하면 ?v= 숫자도 올려 주세요 (브라우저 캐시 우회)
     brochure: {
-      en: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf?v=9", note: "PDF · 16 pages" },
-      ja: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf?v=9", note: "PDF · 英語版 · 16ページ" }
+      en: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf?v=10", note: "PDF · 16 pages" },
+      ja: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf?v=10", note: "PDF · 英語版 · 16ページ" }
     }
   },
 
@@ -184,16 +184,16 @@ window.LXI = {
           { name: "Dry-air GIS", tag: "Dry air · GWP 0", spec: "15kV 63kA · 27kV 25kA · 38kV 40kA", note: "SF6-free, with the ratings and safety of SF6 types" }
         ]
       },
+      // GIS 는 변압기와 사양 항목이 달라 specRows 로 따로 정의 (카탈로그 용어 기준) — 규격·납기는 specs 에서 공통 표시
+      specRows: [
+        { icon: "volt", label: "Rated Voltage", value: "15 / 27 / 38kV", note: "IEEE class · IEC 24 / 36kV types" },
+        { icon: "gauge", label: "Rated Current", value: "up to 3,150A", note: "Main busbar & feeders 1,250 – 3,150A" },
+        { icon: "power", label: "Short-time Withstand Current", value: "up to 63kA / 3s", note: "15kV 63kA · 27kV 25kA · 38kV 40kA", wide: true },
+        { icon: "phase", label: "Busbar", value: "Single / Double", note: "Transfer (bypass) or ring on request" },
+        { icon: "drop", label: "Insulation Medium", value: "SF6 / Dry air", note: "Dry air: GWP 0 · vacuum interrupters" }
+      ],
       specs: {
-        phase: "Three-phase",
-        frequency: "50 / 60Hz",
-        voltage: "15 / 27 / 38kV",
-        voltageNote: "IEEE class · IEC 24 / 36kV types",
-        rating: "up to 3,150A",                // GIS 는 MVA 대신 정격전류/단시간전류로 표기
-        ratingNote: "Short-circuit up to 63kA / 3s",
-        insulation: "SF6 or dry air",
-        insulationNote: "Vacuum circuit breakers · dry air GWP 0",
-        standards: "IEEE C37.20.9 · C37.20.7 · IEC 62271-200",
+        standards: "IEEE C37.20.9 / IEC 62271-200",
         leadTime: "TBD"
       },
       madeIn: ["kr"]
@@ -256,7 +256,7 @@ window.LXI = {
       cardItems: "GIS · Power TR · MV / LV SWGR · Busway",
       cardImage: "assets/img/products/pad-mounted-640.webp",
       intro: "Total electrical infrastructure for data centers — GIS, transformers, MV / LV switchgear and busway from Korea’s top-tier manufacturers, from the utility interconnection to the rack.",
-      stats: ["154kV to LV — one package", "UL-certified distribution TR", "MV GIS up to 38kV"],
+      stats: ["154kV to LV — one package", "UL-listed distribution TR", "MV GIS up to 38kV"],
       // 공급 품목·사양 범위 (DC Product line 기준) — 상세 카드가 있는 품목은 ref 로 연결
       productLine: {
         title: "Product line · specification ranges",
@@ -268,7 +268,7 @@ window.LXI = {
           { level: "MV", items: [
             { name: "MV GIS", spec: "up to 36kV · 4,000A · 40kA", note: "IEC · IEEE 38kV types", ref: "mv-gis" },
             { name: "MV Switchgear", spec: "up to 24kV · 4,000A · 40kA", note: "17.5 / 12 (6.6)kV · 4,000A · 50kA" },
-            { name: "Pad-mounted Transformer", spec: "up to 34.5kV · 10MVA", note: "UL certified", ref: "pad-mounted" },
+            { name: "Pad-mounted Transformer", spec: "up to 34.5kV · 10MVA", note: "UL listed", ref: "pad-mounted" },
             { name: "Mold Transformer", spec: "up to 36kV · 30MVA", note: "Cast-resin, indoor" }
           ] },
           { level: "LV", items: [

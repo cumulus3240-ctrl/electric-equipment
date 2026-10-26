@@ -532,13 +532,18 @@
     var kicker = item.subtitle || p.family || "";
     var mailName = (enItem.subtitle || enItem.title || enP.name) + (item.ul ? " (UL)" : "");
     var render = p.image.type === "render" ? " is-render" : "";
-    var ul = item.ul ? '<img class="product__ul" src="assets/img/badges/ul-mark.svg" alt="UL Certified" width="56" height="56">' : "";
+    var ul = item.ul ? '<img class="product__ul" src="assets/img/badges/ul-mark.svg" alt="UL Listed" width="56" height="56">' : "";
     var cap = sp.rating !== undefined
       ? specRow("", "gauge", T.rating, val(sp.rating, sp.ratingNote))
       : specRow("", "gauge", T.capacity, val(sp.capacity, sp.capacityNote));
     var phase = specRow("", "phase", T.phase, val(sp.phase)) + specRow("", "freq", T.frequency, val(sp.frequency));
     var grid;
-    if (sp.voltageNote && sp.voltageNote.length > 22 && sp.insulation !== undefined && sp.tap !== undefined) {
+    if (p.specRows) {
+      // product-specific spec items (e.g. MV GIS: voltage, current, short-time withstand, busbar, insulation medium)
+      grid = p.specRows.map(function (r) {
+        return specRow(r.wide ? "spec--wide" : "", r.icon || "std", r.label, val(r.value, r.note));
+      }).join("");
+    } else if (sp.voltageNote && sp.voltageNote.length > 22 && sp.insulation !== undefined && sp.tap !== undefined) {
       // long voltage list (e.g. 69/115/138/230/345/500kV): voltage & insulation get full rows, capacity pairs with tap changer
       grid = phase + cap + specRow("", "tap", T.tap, val(sp.tap)) +
         specRow("spec--wide", "volt", T.voltage, val(sp.voltage, sp.voltageNote)) +
