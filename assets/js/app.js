@@ -56,9 +56,15 @@
   function telHref(number) {
     return "tel:" + number.replace(/[^+\d]/g, "");
   }
-  function waHref() {
-    var W = D.CONTACT.whatsapp;
-    return "https://wa.me/" + W.number.replace(/\D/g, "") + (W.text ? "?text=" + encodeURIComponent(W.text) : "");
+  // WhatsApp: a solution page goes to that solution's contact (mobile number), the home page to CONTACT.whatsapp
+  function waContact(sol) {
+    var W = D.CONTACT.whatsapp, k = sol && sol.contact;
+    if (!W) return null;
+    var name = k ? k.name : W.name;
+    return { name: name, number: k ? k.phone : W.number, text: W.text ? fmt(W.text, { name: name.split(" ")[0] }) : "" };
+  }
+  function waHref(w) {
+    return "https://wa.me/" + w.number.replace(/\D/g, "") + (w.text ? "?text=" + encodeURIComponent(w.text) : "");
   }
 
   // Outlook-safe mailto: ASCII only (classic Outlook garbles UTF-8 in mailto) and CRLF line breaks (RFC 6068)
@@ -260,7 +266,7 @@
   }
 
   function contactBlock(sol) {
-    var C = D.CONTACT, W = C.whatsapp, B = brochure(), solId = sol && sol.contact ? sol.id : "";
+    var C = D.CONTACT, W = waContact(sol), B = brochure(), solId = sol && sol.contact ? sol.id : "";
     var nums = phoneLines(sol).map(function (p) {
       return '<span class="cnum"><img src="' + p.flag + '" alt="" width="18" height="12">' + esc(p.number) + '</span>';
     }).join("");
@@ -276,7 +282,7 @@
         '<span class="btn__text">' + esc(T.callUs) + '<small class="cnums">' + nums + '</small></span></button>'
     ];
     if (W) {
-      btns.push('<a class="btn btn--wa" href="' + waHref() + '" target="_blank" rel="noopener" data-ev="whatsapp">' + waIcon() +
+      btns.push('<a class="btn btn--wa" href="' + waHref(W) + '" target="_blank" rel="noopener" data-ev="whatsapp">' + waIcon() +
         '<span class="btn__text">' + esc(T.whatsapp) + '<small>' + esc(W.name) + ' \u00b7 ' + esc(W.number) + '</small></span></a>');
     }
     if (B) {

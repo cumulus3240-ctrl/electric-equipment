@@ -46,8 +46,8 @@ window.LXI = {
       { label: "Korea", number: "+82-10-3380-3240", flag: "assets/img/flags/kr.svg" }
     ],
     mail: {
-      to: ["jhbaka@lxintl.co.kr", "maparka@lxintl.co.kr"],                                   // 수신
-      cc: ["ihpark@lxintl.co.kr", "hslee@lxintl.co.kr", "ybsonga@lxintl.co.kr",
+      to: ["jhbaka@lxintl.co.kr", "maparka@lxintl.co.kr", "hslee@lxintl.co.kr"],             // 수신 (홈 화면)
+      cc: ["ihpark@lxintl.co.kr", "ybsonga@lxintl.co.kr",
            "gyhwang@lxintl.co.kr", "jwkimf@lxintl.co.kr"],                                   // 참조
       subject: "Request for Quotation - {product} | LX International",
       generalProduct: "Power Equipment",                  // 제목 {product} 기본값 (상단·하단 Email 버튼)
@@ -71,8 +71,10 @@ window.LXI = {
         "[Additional notes]\n\n\n" +
         "Best regards,\n"
     },
+    // 홈 화면 WhatsApp — 솔루션 화면에서는 해당 솔루션 담당자(SOLUTIONS[i].contact)의 휴대폰 번호로 연결
+    // text 의 {name} 은 연결되는 담당자의 이름(first name)으로 바뀝니다
     whatsapp: { name: "Jayde Bak", number: "+82-10-3380-3240",
-                text: "Hello Jayde, I would like to know more about LX International's power equipment solutions." },
+                text: "Hello {name}, I would like to know more about LX International's power equipment solutions." },
     // 언어별 브로셔 (null 이면 버튼 숨김) — 일본어 브로셔 제작 전까지 일본어 화면도 영문 PDF 연결
     // PDF 를 교체하면 ?v= 숫자도 올려 주세요 (브라우저 캐시 우회)
     brochure: {
