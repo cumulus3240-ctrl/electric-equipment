@@ -229,7 +229,8 @@ window.LXI_I18N = {
             { label: "定格短時間耐電流", value: "最大 63kA / 3秒" },
             { label: "母線構成", value: "単母線 / 二重母線", note: "トランスファー（バイパス）母線・リング母線にも対応" },
             { label: "絶縁媒体", value: "SF6 / ドライエア", note: "ドライエア：GWP 0 · 真空遮断器" }
-          ]
+          ],
+          specs: { leadTime: "8か月" }
         },
         "mv-station": {
           name: "MVステーション", family: "BESS向け一体型MVステーション", headline: "2.8 / 5.6MVA · 22kV · 20ftコンテナ",

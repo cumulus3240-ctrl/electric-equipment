@@ -78,8 +78,8 @@ window.LXI = {
     // 언어별 브로셔 (null 이면 버튼 숨김) — 일본어 브로셔 제작 전까지 일본어 화면도 영문 PDF 연결
     // PDF 를 교체하면 ?v= 숫자도 올려 주세요 (브라우저 캐시 우회)
     brochure: {
-      en: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf?v=15", note: "PDF · 16 pages" },
-      ja: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf?v=15", note: "PDF · 英語版 · 16ページ" }
+      en: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf?v=16", note: "PDF · 16 pages" },
+      ja: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf?v=16", note: "PDF · 英語版 · 16ページ" }
     }
   },
 
@@ -195,7 +195,7 @@ window.LXI = {
       ],
       specs: {
         standards: "IEEE C37.20.9 / IEC 62271-200",
-        leadTime: "TBD"
+        leadTime: "8 months"
       },
       madeIn: ["kr"]
     },
