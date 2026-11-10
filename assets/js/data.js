@@ -78,8 +78,8 @@ window.LXI = {
     // 언어별 브로셔 (null 이면 버튼 숨김) — 일본어 브로셔 제작 전까지 일본어 화면도 영문 PDF 연결
     // PDF 를 교체하면 ?v= 숫자도 올려 주세요 (브라우저 캐시 우회)
     brochure: {
-      en: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf?v=12", note: "PDF · 16 pages" },
-      ja: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf?v=12", note: "PDF · 英語版 · 16ページ" }
+      en: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf?v=15", note: "PDF · 16 pages" },
+      ja: { href: "assets/docs/LX-International_Power-Equipment-Brochure_EN.pdf?v=15", note: "PDF · 英語版 · 16ページ" }
     }
   },
 
@@ -130,7 +130,7 @@ window.LXI = {
         standards: "ANSI / IEEE / DOE / CSA",
         leadTime: "8 – 16 weeks"
       },
-      madeIn: ["kr", "om"]           // Data Center·ESS 의 'Distribution Transformer' 카드도 이 값을 사용
+      madeIn: ["kr", "tw", "om"]     // Data Center·ESS 의 'Distribution Transformer' 카드도 이 값을 사용
     },
 
     "pole-mounted": {
@@ -305,11 +305,12 @@ window.LXI = {
           { icon: "truck", title: "Delivery to site", text: "Ocean, inland transport, installation and O&M coordinated by one partner." }
         ]
       },
+      // MV GIS 를 변압기보다 먼저 안내 (i18n.js 일본어 sections 도 같은 순서)
       sections: [
-        { items: [
+        { title: "MV GIS", items: [ { id: "mv-gis" } ] },
+        { title: "Transformer", items: [
           { id: "power-transformer" },
-          { id: "pad-mounted", title: "Distribution Transformer", subtitle: "Pad-mounted Transformer", ul: true },
-          { id: "mv-gis" }
+          { id: "pad-mounted", title: "Distribution Transformer", subtitle: "Pad-mounted Transformer", ul: true }
         ] }
       ]
     },
@@ -322,7 +323,7 @@ window.LXI = {
       cardItems: "MV Station · Power TR · Pad-mount",
       cardImage: "assets/img/products/mv-station-render-900.webp",
       intro: "Containerized MV stations (2.8 / 5.6MVA) and transformers that connect battery energy storage to the grid.",
-      stats: ["2.8 / 5.6MVA MV stations", "Power & distribution TR", "BESS supply in Japan"],
+      stats: ["2.8 / 5.6MVA MV stations", "Power & distribution TR", "UL-listed distribution TR"],
       chain: [
         { label: "Battery & PCS", sub: "LV AC", end: true },
         { label: "MV Station", sub: "LV / MV step-up", ref: "mv-station" },
@@ -386,18 +387,6 @@ window.LXI = {
     { icon: "clock", value: "8–16", unit: "wks", label: "Distribution TR lead time" },
     { icon: "clock", value: "12–20", unit: "mo", label: "EHV power TR lead time (OLTC)" },
     { icon: "shield", value: "100%", label: "P-Bond secured" }
-  ],
-
-  /* Current Status & Pipeline — state: delivering | developing, tags: 해당 솔루션 페이지에도 표시 */
-  TRACK: [
-    { region: "USA", flag: "us", items: [
-      { state: "delivering", text: "EHV power transformers for U.S. utilities — supply commenced in 2025", tags: ["power", "data-center"] },
-      { state: "developing", text: "Transformers for U.S. data centers", tags: ["data-center"] }
-    ] },
-    { region: "Japan", flag: "jp", items: [
-      { state: "delivering", text: "Supply to a Japanese BESS operator and a shipyard", tags: ["ess"] },
-      { state: "developing", text: "BESS project development in Japan and Australia", tags: ["ess"] }
-    ] }
   ],
 
   /* 인증·시험 대응 (공식 로고 대신 텍스트 배지 — 인증서·성적서는 승인 제조사가 보유) */

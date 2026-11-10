@@ -304,11 +304,6 @@
       '</section>';
   }
 
-  function statusChip(state) {
-    var dev = state === "developing";
-    return '<span class="status' + (dev ? " status--dev" : "") + '">' + esc(dev ? T.developing : T.delivering) + '</span>';
-  }
-
   function certBlock(compact) {
     var C = D.CERTS;
     var groups = C.groups.map(function (g) {
@@ -413,15 +408,6 @@
       '</div>';
   }
 
-  function trackBlock() {
-    return D.TRACK.map(function (t) {
-      var items = t.items.map(function (it) {
-        return '<li>' + statusChip(it.state) + '<p>' + esc(it.text) + '</p></li>';
-      }).join("");
-      return '<article class="track"><h3 class="track__head">' + flagImg(t.flag, 24, 16) + esc(t.region) + '</h3><ul>' + items + '</ul></article>';
-    }).join("");
-  }
-
   function scaleBlock() {
     var S = D.SCALE;
     function boxes(list, cls) {
@@ -483,6 +469,7 @@
           '<p class="section-lead">' + esc(T.modelLead) + '</p>' +
           '<ul class="scope__list" aria-label="' + esc(T.scopeAria) + '">' + scope + '</ul>' +
           modelBlock() +
+          scaleBlock() +
         '</div>' +
       '</section>' +
 
@@ -509,15 +496,6 @@
           '<p class="eyebrow eyebrow--red">' + esc(T.certEyebrow) + '</p>' +
           '<h2 id="cert-title" class="section-title">' + esc(T.certTitle) + '</h2>' +
           certBlock(false) +
-        '</div>' +
-      '</section>' +
-
-      '<section class="tracks" aria-labelledby="track-title">' +
-        '<div class="wrap">' +
-          '<p class="eyebrow eyebrow--red">' + esc(T.trackEyebrow) + '</p>' +
-          '<h2 id="track-title" class="section-title">' + esc(T.trackTitle) + '</h2>' +
-          '<div class="tracks__grid">' + trackBlock() + '</div>' +
-          scaleBlock() +
         '</div>' +
       '</section>' +
       contactBlock() + footer();
@@ -672,16 +650,6 @@
     return '<div class="panel"><p class="panel__title">' + esc(T.chainTitle) + '</p><div class="chain chain--' + sol.chain.length + '">' + nodes + '</div></div>';
   }
 
-  function proofStrip(sol) {
-    var rows = [];
-    D.TRACK.forEach(function (t) {
-      t.items.forEach(function (it) {
-        if (it.tags && it.tags.indexOf(sol.id) >= 0) rows.push('<li>' + flagImg(t.flag, 24, 16) + '<div>' + statusChip(it.state) + '<p>' + esc(it.text) + '</p></div></li>');
-      });
-    });
-    return rows.length ? '<section class="proof" aria-label="' + esc(T.trackPanel) + '"><p class="panel__title">' + esc(T.trackPanel) + '</p><ul>' + rows.join("") + '</ul></section>' : "";
-  }
-
   function whyStrip(sol) {
     var W = sol.why || T.whyDefault;
     var items = W.items.map(function (w) {
@@ -729,7 +697,7 @@
           '<p class="sol-hero__intro">' + esc(sol.intro) + '</p>' + stats +
         '</div>' +
       '</section>' +
-      '<div class="wrap sol-body">' + topPanel(sol) + proofStrip(sol) + sections + whyStrip(sol) +
+      '<div class="wrap sol-body">' + topPanel(sol) + sections + whyStrip(sol) +
         '<section class="certpanel" aria-label="' + esc(T.certEyebrow) + '"><p class="panel__title">' + esc(T.certEyebrow) + '</p>' + certBlock(true) + '</section>' +
       '</div>' +
       contactBlock(sol) +

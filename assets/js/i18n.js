@@ -35,10 +35,6 @@ window.LXI_I18N = {
       whyTitle: "Value beyond the equipment",
       certEyebrow: "Certifications & testing",
       certTitle: "Built and tested to global standards",
-      trackEyebrow: "Track record & pipeline",
-      trackTitle: "Delivering today, building tomorrow",
-      delivering: "Delivering",
-      developing: "Developing",
       scalingUp: "Scaling up",
       expansion: "Expansion",
       contactTitle: "Let’s power your next project",
@@ -52,7 +48,6 @@ window.LXI_I18N = {
       solutionN: "Solution {n}",
       lineup: "Product line-up",
       chainTitle: "Where we fit in your power chain",
-      trackPanel: "Track record & pipeline",
       exploreMore: "Explore more",
       othersAria: "Other solutions",
       phase: "Phase",
@@ -124,10 +119,6 @@ window.LXI_I18N = {
       whyTitle: "機器にとどまらない価値",
       certEyebrow: "認証・試験",
       certTitle: "国際規格に基づく設計と試験",
-      trackEyebrow: "実績とパイプライン",
-      trackTitle: "確かな実績、広がる未来",
-      delivering: "納入中",
-      developing: "開発中",
       scalingUp: "事業拡大",
       expansion: "拡大",
       contactTitle: "次のプロジェクトをご相談ください",
@@ -141,7 +132,6 @@ window.LXI_I18N = {
       solutionN: "ソリューション {n}",
       lineup: "製品ラインナップ",
       chainTitle: "電力系統における当社の供給範囲",
-      trackPanel: "実績とパイプライン",
       exploreMore: "その他のソリューション",
       othersAria: "その他のソリューション",
       phase: "相数",
@@ -311,13 +301,16 @@ window.LXI_I18N = {
               { title: "現場までの納入", text: "海上・内陸輸送から据付・O&Mまで、一つの窓口で対応します。" }
             ]
           },
-          sections: [{ items: [{}, { title: "配電用変圧器", subtitle: "パッドマウント変圧器" }, {}] }]
+          sections: [
+            { title: "中圧GIS" },
+            { title: "変圧器", items: [{}, { title: "配電用変圧器", subtitle: "パッドマウント変圧器" }] }
+          ]
         },
         {
           title: "ESS ソリューション", tagline: "系統連系に対応したBESS",
           cardItems: "MVステーション · 電力用TR · 配電用TR",
           intro: "コンテナ型MVステーション（2.8 / 5.6MVA）と変圧器で、蓄電池システム（BESS）を電力系統に接続します。",
-          stats: ["2.8 / 5.6MVAのMVステーション", "電力用・配電用変圧器", "日本でのBESS向け納入"],
+          stats: ["2.8 / 5.6MVAのMVステーション", "電力用・配電用変圧器", "ULリスティング取得の配電用変圧器"],
           chain: [
             { label: "蓄電池・PCS", sub: "低圧 AC" },
             { label: "MVステーション", sub: "低圧 / 中圧 昇圧" },
@@ -355,16 +348,6 @@ window.LXI_I18N = {
         { unit: "週", label: "配電用変圧器の納期" },
         { unit: "か月", label: "超高圧変圧器の納期（OLTC付）" },
         { label: "P-Bond確保" }
-      ],
-      TRACK: [
-        { region: "米国", items: [
-          { text: "米国電力会社向け超高圧電力用変圧器 — 2025年に供給開始" },
-          { text: "米国データセンター向け変圧器" }
-        ] },
-        { region: "日本", items: [
-          { text: "日本のBESS事業者および造船所への供給" },
-          { text: "日本・オーストラリアでのBESSプロジェクト開発" }
-        ] }
       ],
       SCALE: {
         label: "電力・エネルギー事業デベロッパー",
